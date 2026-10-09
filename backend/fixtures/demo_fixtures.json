@@ -1,0 +1,973 @@
+{
+  "dfde579d33a727aeb585571d9348240fb273502131f92423dbf13095424d5927": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "document_category_guess": "component_status_sheet",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "aircraft_registration",
+            "qualifier": null,
+            "raw_value": "N-A1234",
+            "normalized_value": "N-A1234",
+            "page_number": 1,
+            "evidence_text": "Aircraft Registration: N-A1234",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-1000-A",
+            "normalized_value": "PN-1000-A",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-1000-A",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-100234",
+            "normalized_value": "SN-100234",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-100234",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Hydraulic Pump Assembly",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Hydraulic Pump Assembly",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "status_date",
+            "raw_value": "2024-01-10",
+            "normalized_value": "2024-01-10",
+            "page_number": 1,
+            "evidence_text": "Status Date: 2024-01-10",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "1500",
+            "normalized_value": "1500",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 1500 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_cycles",
+            "qualifier": null,
+            "raw_value": "980",
+            "normalized_value": "980",
+            "page_number": 1,
+            "evidence_text": "Flight Cycles: 980 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 1500 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Meridian Technical Records Ltd.",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Meridian Technical Records Ltd.",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "58f17b50d292b013b590e044a698210dcd7156a7044433634ed1121de9be9e60": {
+    "document_category": "maintenance_release_record",
+    "pages": {
+      "1": {
+        "document_category_guess": "maintenance_release_record",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-1000-A",
+            "normalized_value": "PN-1000-A",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-1000-A",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-100234",
+            "normalized_value": "SN-100234",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-100234",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Hydraulic Pump Assembly",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Hydraulic Pump Assembly",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "release_date",
+            "raw_value": "2024-01-10",
+            "normalized_value": "2024-01-10",
+            "page_number": 1,
+            "evidence_text": "Release Date: 2024-01-10",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "1500",
+            "normalized_value": "1500",
+            "page_number": 1,
+            "evidence_text": "Flight Hours at Release: 1500 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_cycles",
+            "qualifier": null,
+            "raw_value": "980",
+            "normalized_value": "980",
+            "page_number": 1,
+            "evidence_text": "Flight Cycles at Release: 980 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours at Release: 1500 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "maintenance_action",
+            "qualifier": null,
+            "raw_value": "Scheduled inspection completed, no defects found.",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Maintenance Action: Scheduled inspection completed, no defects found.",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "work_order_reference",
+            "qualifier": null,
+            "raw_value": "WO-55521",
+            "normalized_value": "WO-55521",
+            "page_number": 1,
+            "evidence_text": "Work Order Reference: WO-55521",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Meridian Technical Records Ltd.",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Meridian Technical Records Ltd.",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "af92a3803e37d6a21d20f188eb36db177ee0b445177a6fc28046ce88067290b4": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "document_category_guess": "component_status_sheet",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "aircraft_registration",
+            "qualifier": null,
+            "raw_value": "N-B5678",
+            "normalized_value": "N-B5678",
+            "page_number": 1,
+            "evidence_text": "Aircraft Registration: N-B5678",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-2000-B",
+            "normalized_value": "PN-2000-B",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-2000-B",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Fuel Control Unit",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Fuel Control Unit",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "status_date",
+            "raw_value": "2024-02-05",
+            "normalized_value": "2024-02-05",
+            "page_number": 1,
+            "evidence_text": "Status Date: 2024-02-05",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "800",
+            "normalized_value": "800",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 800 (since overhaul)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since overhaul",
+            "normalized_value": "since_overhaul",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 800 (since overhaul)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Pacific Rim Aircraft Services",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Pacific Rim Aircraft Services",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "3bc403c322a008593361104d53fd2a45d6c6d7fd6deb351af9474522c0647506": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "document_category_guess": "component_status_sheet",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "aircraft_registration",
+            "qualifier": null,
+            "raw_value": "N-C1111",
+            "normalized_value": "N-C1111",
+            "page_number": 1,
+            "evidence_text": "Aircraft Registration: N-C1111",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-3000-C",
+            "normalized_value": "PN-3000-C",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-3000-C",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-300100",
+            "normalized_value": "SN-300100",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-300100",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Avionics Control Module",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Avionics Control Module",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "status_date",
+            "raw_value": "2024-03-01",
+            "normalized_value": "2024-03-01",
+            "page_number": 1,
+            "evidence_text": "Status Date: 2024-03-01",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "300",
+            "normalized_value": "300",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 300 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 300 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Highland Aviation Support",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Highland Aviation Support",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "6c1ef64d75b7822abe4f92168d593965e79b48cbec6af564ff7defdaf57bb9b6": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "document_category_guess": "component_status_sheet",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "aircraft_registration",
+            "qualifier": null,
+            "raw_value": "N-C1111",
+            "normalized_value": "N-C1111",
+            "page_number": 1,
+            "evidence_text": "Aircraft Registration: N-C1111",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-3000-D",
+            "normalized_value": "PN-3000-D",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-3000-D",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-300101",
+            "normalized_value": "SN-300101",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-300101",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Avionics Control Module",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Avionics Control Module",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "status_date",
+            "raw_value": "2024-03-01",
+            "normalized_value": "2024-03-01",
+            "page_number": 1,
+            "evidence_text": "Status Date: 2024-03-01",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "50",
+            "normalized_value": "50",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 50 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 50 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Highland Aviation Support",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Highland Aviation Support",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "23b10797647c22423ca208c9e0800374ceef41cad26d2ed38243200c755a9014": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "document_category_guess": "component_status_sheet",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "aircraft_registration",
+            "qualifier": null,
+            "raw_value": "N-D2222",
+            "normalized_value": "N-D2222",
+            "page_number": 1,
+            "evidence_text": "Aircraft Registration: N-D2222",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-4000-E",
+            "normalized_value": "PN-4000-E",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-4000-E",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-400200",
+            "normalized_value": "SN-400200",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-400200",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Landing Gear Actuator",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Landing Gear Actuator",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "status_date",
+            "raw_value": "2024-03-01",
+            "normalized_value": "2024-03-01",
+            "page_number": 1,
+            "evidence_text": "Status Date: 2024-03-01",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "2000",
+            "normalized_value": "2000",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 2000 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 2000 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Coastal Aero Maintenance",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Coastal Aero Maintenance",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "0ab4088cee53be2da455b077bf9650ce9d8ce51662457b6ee6502b3949716c40": {
+    "document_category": "maintenance_release_record",
+    "pages": {
+      "1": {
+        "document_category_guess": "maintenance_release_record",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-4000-E",
+            "normalized_value": "PN-4000-E",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-4000-E",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-400200",
+            "normalized_value": "SN-400200",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-400200",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Landing Gear Actuator",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Landing Gear Actuator",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "release_date",
+            "raw_value": "2024-04-01",
+            "normalized_value": "2024-04-01",
+            "page_number": 1,
+            "evidence_text": "Release Date: 2024-04-01",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "1800",
+            "normalized_value": "1800",
+            "page_number": 1,
+            "evidence_text": "Flight Hours at Release: 1800 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours at Release: 1800 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "maintenance_action",
+            "qualifier": null,
+            "raw_value": "Unscheduled removal and bench inspection.",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Maintenance Action: Unscheduled removal and bench inspection.",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "work_order_reference",
+            "qualifier": null,
+            "raw_value": "WO-66102",
+            "normalized_value": "WO-66102",
+            "page_number": 1,
+            "evidence_text": "Work Order Reference: WO-66102",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Coastal Aero Maintenance",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Coastal Aero Maintenance",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "a362606f959374c09c15be30cc6403b8a3b3e4217735b8f51168894714dea329": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "document_category_guess": "component_status_sheet",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "aircraft_registration",
+            "qualifier": null,
+            "raw_value": "N-E3333",
+            "normalized_value": "N-E3333",
+            "page_number": 1,
+            "evidence_text": "Aircraft Registration: N-E3333",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-5000-F",
+            "normalized_value": "PN-5000-F",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-5000-F",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-500300",
+            "normalized_value": "SN-500300",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-500300",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Auxiliary Power Unit Starter",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Auxiliary Power Unit Starter",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "status_date",
+            "raw_value": "2024-02-01",
+            "normalized_value": "2024-02-01",
+            "page_number": 1,
+            "evidence_text": "Status Date: 2024-02-01",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "500",
+            "normalized_value": "500",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 500 (since overhaul)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since overhaul",
+            "normalized_value": "since_overhaul",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 500 (since overhaul)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Desert Sky MRO",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Desert Sky MRO",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "6b2e0ff9888ac2e61ddf566d19ea92a02d9533e0446ce5a18b25741f5f861112": {
+    "document_category": "maintenance_release_record",
+    "pages": {
+      "1": {
+        "document_category_guess": "maintenance_release_record",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-5000-F",
+            "normalized_value": "PN-5000-F",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-5000-F",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-500300",
+            "normalized_value": "SN-500300",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-500300",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Auxiliary Power Unit Starter",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Auxiliary Power Unit Starter",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "release_date",
+            "raw_value": "2024-05-01",
+            "normalized_value": "2024-05-01",
+            "page_number": 1,
+            "evidence_text": "Release Date: 2024-05-01",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "300",
+            "normalized_value": "300",
+            "page_number": 1,
+            "evidence_text": "Flight Hours at Release: 300 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours at Release: 300 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "maintenance_action",
+            "qualifier": null,
+            "raw_value": "Overhauled and returned to service as new reference.",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Maintenance Action: Overhauled and returned to service as new reference.",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "work_order_reference",
+            "qualifier": null,
+            "raw_value": "WO-77230",
+            "normalized_value": "WO-77230",
+            "page_number": 1,
+            "evidence_text": "Work Order Reference: WO-77230",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Desert Sky MRO",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Desert Sky MRO",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "255cb4e5b5eeb40a98c569c1f89efe06c0ec22fd3049d7dea6e310ab46635a16": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "document_category_guess": "component_status_sheet",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "aircraft_registration",
+            "qualifier": null,
+            "raw_value": "N-F4444",
+            "normalized_value": "N-F4444",
+            "page_number": 1,
+            "evidence_text": "Aircraft Registration: N-F4444",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-6000-G",
+            "normalized_value": "PN-6000-G",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-6000-G",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-600400",
+            "normalized_value": "SN-600400",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-600400",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "status_date",
+            "raw_value": "2024-02-20",
+            "normalized_value": "2024-02-20",
+            "page_number": 1,
+            "evidence_text": "Status Date: 2024-02-20",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "120",
+            "normalized_value": "120",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 120 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 120 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Blue Harbor Aircraft Records",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Blue Harbor Aircraft Records",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "f3af44eb1d9b829bc3a21359cf82e9dce3d22de6c00960dfc1c9bff62fbb6563": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "document_category_guess": "component_status_sheet",
+        "category_confidence": "high",
+        "page_is_scanned_image": false,
+        "fields": [
+          {
+            "field_name": "aircraft_registration",
+            "qualifier": null,
+            "raw_value": "N-G5555",
+            "normalized_value": "N-G5555",
+            "page_number": 1,
+            "evidence_text": "Aircraft Registration: N-G5555",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "part_number",
+            "qualifier": null,
+            "raw_value": "PN-7000-H",
+            "normalized_value": "PN-7000-H",
+            "page_number": 1,
+            "evidence_text": "Part Number: PN-7000-H",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "serial_number",
+            "qualifier": null,
+            "raw_value": "SN-700500",
+            "normalized_value": "SN-700500",
+            "page_number": 1,
+            "evidence_text": "Serial Number: SN-700500",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "component_description",
+            "qualifier": null,
+            "raw_value": "Oxygen Generator",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Component Description: Oxygen Generator",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "date",
+            "qualifier": "status_date",
+            "raw_value": "2024-01-15",
+            "normalized_value": "2024-01-15",
+            "page_number": 1,
+            "evidence_text": "Status Date: 2024-01-15",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "flight_hours",
+            "qualifier": null,
+            "raw_value": "60",
+            "normalized_value": "60",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 60 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "usage_basis",
+            "qualifier": null,
+            "raw_value": "since new",
+            "normalized_value": "since_new",
+            "page_number": 1,
+            "evidence_text": "Flight Hours: 60 (since new)",
+            "self_reported_confidence": "high"
+          },
+          {
+            "field_name": "organization",
+            "qualifier": null,
+            "raw_value": "Summit Aviation Records",
+            "normalized_value": null,
+            "page_number": 1,
+            "evidence_text": "Organization: Summit Aviation Records",
+            "self_reported_confidence": "high"
+          }
+        ],
+        "notes": null
+      }
+    }
+  },
+  "a864973ff6a0c37e0f1eeb2b15c9f27700c95c920d3c26c058130bb606105378": {
+    "document_category": "component_status_sheet",
+    "pages": {
+      "1": {
+        "simulate_error": true,
+        "simulate_error_message": "Simulated OCR engine timeout while reading page 1 (demo fixture)."
+      }
+    }
+  }
+}

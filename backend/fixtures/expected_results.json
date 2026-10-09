@@ -1,0 +1,86 @@
+{
+  "A1_status_sheet.pdf": {
+    "sha256": "dfde579d33a727aeb585571d9348240fb273502131f92423dbf13095424d5927",
+    "document_category": "component_status_sheet",
+    "part_number": "PN-1000-A",
+    "serial_number": "SN-100234",
+    "scenario": "consistent_pair_member"
+  },
+  "A1_release_record.pdf": {
+    "sha256": "58f17b50d292b013b590e044a698210dcd7156a7044433634ed1121de9be9e60",
+    "document_category": "maintenance_release_record",
+    "part_number": "PN-1000-A",
+    "serial_number": "SN-100234",
+    "scenario": "consistent_pair_member"
+  },
+  "B1_status_missing_serial.pdf": {
+    "sha256": "af92a3803e37d6a21d20f188eb36db177ee0b445177a6fc28046ce88067290b4",
+    "document_category": "component_status_sheet",
+    "scenario": "missing_required_identifier",
+    "expected_finding_rule_id": "required_identifiers_missing"
+  },
+  "C1_status_component_one.pdf": {
+    "sha256": "3bc403c322a008593361104d53fd2a45d6c6d7fd6deb351af9474522c0647506",
+    "document_category": "component_status_sheet",
+    "part_number": "PN-3000-C",
+    "serial_number": "SN-300100",
+    "scenario": "distinct_component_must_not_merge"
+  },
+  "C2_status_component_two.pdf": {
+    "sha256": "6c1ef64d75b7822abe4f92168d593965e79b48cbec6af564ff7defdaf57bb9b6",
+    "document_category": "component_status_sheet",
+    "part_number": "PN-3000-D",
+    "serial_number": "SN-300101",
+    "scenario": "distinct_component_must_not_merge"
+  },
+  "D1_status_sheet.pdf": {
+    "sha256": "23b10797647c22423ca208c9e0800374ceef41cad26d2ed38243200c755a9014",
+    "document_category": "component_status_sheet",
+    "part_number": "PN-4000-E",
+    "serial_number": "SN-400200",
+    "scenario": "decreasing_usage_discrepancy_member"
+  },
+  "D1_release_record.pdf": {
+    "sha256": "0ab4088cee53be2da455b077bf9650ce9d8ce51662457b6ee6502b3949716c40",
+    "document_category": "maintenance_release_record",
+    "part_number": "PN-4000-E",
+    "serial_number": "SN-400200",
+    "scenario": "decreasing_usage_discrepancy_member",
+    "expected_finding_rule_id": "decreasing_flight_hours"
+  },
+  "E1_status_sheet.pdf": {
+    "sha256": "a362606f959374c09c15be30cc6403b8a3b3e4217735b8f51168894714dea329",
+    "document_category": "component_status_sheet",
+    "part_number": "PN-5000-F",
+    "serial_number": "SN-500300",
+    "scenario": "different_usage_basis_no_false_discrepancy_member"
+  },
+  "E1_release_record.pdf": {
+    "sha256": "6b2e0ff9888ac2e61ddf566d19ea92a02d9533e0446ce5a18b25741f5f861112",
+    "document_category": "maintenance_release_record",
+    "part_number": "PN-5000-F",
+    "serial_number": "SN-500300",
+    "scenario": "different_usage_basis_no_false_discrepancy_member",
+    "expected_no_finding_rule_id": "decreasing_flight_hours"
+  },
+  "F1_status_unreadable_field.pdf": {
+    "sha256": "255cb4e5b5eeb40a98c569c1f89efe06c0ec22fd3049d7dea6e310ab46635a16",
+    "document_category": "component_status_sheet",
+    "part_number": "PN-6000-G",
+    "serial_number": "SN-600400",
+    "scenario": "unreadable_non_required_field"
+  },
+  "G1_status_no_release.pdf": {
+    "sha256": "f3af44eb1d9b829bc3a21359cf82e9dce3d22de6c00960dfc1c9bff62fbb6563",
+    "document_category": "component_status_sheet",
+    "part_number": "PN-7000-H",
+    "serial_number": "SN-700500",
+    "scenario": "expected_document_missing_member",
+    "expected_finding_rule_id": "expected_document_missing",
+    "requires_project_setting": "require_maintenance_release_for_status_sheets"
+  },
+  "H1_processing_failure.pdf": {
+    "sha256": "a864973ff6a0c37e0f1eeb2b15c9f27700c95c920d3c26c058130bb606105378",
+    "scenario": "processing_failure_must_not_look_clean"
+  }
+}

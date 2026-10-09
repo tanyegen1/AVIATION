@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+backend/storage/
+backend/*.db
+backend/*.db-journal
+backend/*.db-wal
+backend/*.db-shm
+backend/.pytest_cache/
+.env
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.log
+.DS_Store
