@@ -1,0 +1,14 @@
+**/.venv
+**/node_modules
+**/__pycache__
+**/*.pyc
+backend/storage
+backend/*.db
+backend/*.db-wal
+backend/*.db-shm
+backend/.pytest_cache
+frontend/dist
+.git
+.env
+backend/.env
+*.log

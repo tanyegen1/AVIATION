@@ -129,61 +129,55 @@ This is **one shared password for the whole app**, not per-user accounts —
 good enough to keep casual visitors out of a single-reviewer deployment, not
 a substitute for real multi-tenant authentication (see Known limitations).
 
-**B. Run it as a single process.** `app/main.py` serves the built frontend
-(`frontend/dist/`) directly once it exists - API and UI share one port and
-one origin, so there's no separate static host and no CORS configuration
-needed. `scripts/replit_start.sh` does exactly this: installs backend
-deps, builds the frontend if needed, and starts `uvicorn` on `0.0.0.0:$PORT`.
-This is what makes a single-process host like Replit work with no
-separate "hosting" purchase.
+**B. Run it as a single containerized process.** The root `Dockerfile` is a
+multi-stage build: it compiles the frontend, then runs the backend, which
+serves the built frontend (`frontend/dist/`) directly - API and UI share
+one port and one origin, so there's no separate static host and no CORS
+configuration to manage. This one image is portable to any Docker-capable
+host; `render.yaml` wires it up for **Render** specifically, chosen because
+its free tier needs no credit card and "connect a GitHub repo, click
+deploy" is close to zero-setup.
 
-### Deploying on Replit with a custom domain (no separate hosting)
+### Deploying on Render with a custom domain
 
-1. On replit.com, **Create App → Import from GitHub** and point it at this
-   repo/branch.
-2. Open the **Secrets** tool (padlock icon) and add:
+1. Push this repo to GitHub if it isn't already (it's already on
+   `tanyegen1/AVIATION`).
+2. Sign up at **render.com** (GitHub login is the fastest option).
+3. **New → Blueprint**, pick this repo/branch. Render reads `render.yaml`
+   automatically and sets everything up from it.
+4. It will ask you to fill in two secret values before deploying:
    - `ADMIN_PASSWORD` — the access-gate password (see part A above)
-   - `SESSION_SECRET` — any long random string (so logins survive restarts)
-   - `ANTHROPIC_API_KEY` — only if you want live mode (optional)
-3. Set the Repl's **Run command** to:
-   ```
-   bash scripts/replit_start.sh
-   ```
-   (If Replit's UI doesn't offer that option directly because it guessed
-   a different project type on import, open the **Shell** tab instead and
-   run `bash scripts/replit_start.sh` there - same effect, and you can set
-   that same command as the Deployment's run command in step 4.)
-4. Press **Run** once to confirm it builds and starts cleanly (first build
-   takes a few minutes - it's compiling the frontend and installing
-   dependencies), then use Replit's **Deploy** button to publish it
-   (Reserved VM keeps it always-on and keeps the SQLite database on disk
-   between restarts; Autoscale is cheaper but may not persist local disk
-   storage the same way - check what your Replit plan's deployment types
-   guarantee before picking one, since this app writes uploaded PDFs and
-   its database to local disk under `backend/storage/` and `backend/aviation_records.db`).
-5. In the Deployment's **Settings → Custom domain**, add `recordbridge.ai`
-   (and `www.recordbridge.ai` if you want that too). Replit will show you
-   the **exact DNS records to add** (usually a CNAME or A record, plus a
-   TXT record to verify ownership) - these are generated per-deployment,
-   so copy them exactly as Replit shows them.
-6. In GoDaddy, go to your domain's **DNS Management** page and add those
-   exact records (GoDaddy calls this "DNS Records" / "Manage DNS" under
-   the domain, not the separate "DNS Hosting" product). DNS changes can
-   take anywhere from a few minutes to a few hours to propagate.
+   - `ANTHROPIC_API_KEY` — only if you want live mode (leave blank for demo mode)
+   (`SESSION_SECRET` is generated for you automatically.)
+5. Click **Apply** / **Create Web Service**. First build takes a few
+   minutes (compiling the frontend + installing dependencies inside the
+   container). When it's done you'll have a working `https://recordbridge.onrender.com`-style
+   URL you can open immediately to confirm it works.
+6. In the service's **Settings → Custom Domain**, add `recordbridge.ai`
+   (and `www.recordbridge.ai` if you want that too). Render will show you
+   the **exact DNS record to add** (a CNAME, generated per-deployment —
+   copy it exactly as shown).
+7. In GoDaddy, open your domain's **DNS Management** page (not the
+   separate "DNS Hosting" product — that's a different, unrelated tool)
+   and add that exact CNAME record. DNS changes can take anywhere from a
+   few minutes to a few hours to propagate; Render auto-issues an HTTPS
+   certificate once it sees the DNS pointing at it.
 
-Once that's live, `COOKIE_SECURE` and the single-origin serving above
-mean no further CORS/cookie configuration is needed - Replit serves
-everything over HTTPS automatically.
+**Persistence note:** Render's free plan has no persistent disk, so
+uploaded PDFs and the SQLite database reset on every redeploy/restart —
+fine for trying it out, not for real use. `render.yaml` has a commented-out
+`disk:` block; uncomment it and bump `plan` to `starter` (~$7/month) once
+you're ready to keep real data permanently. This isn't something I can
+turn on for you from here — it's a paid-plan change on your Render
+account, your call on when/whether to spend that.
 
-### Other hosting options (if you ever move off Replit)
+### Other hosting options
 
-Any host that can run a long-lived process works the same way via
-`scripts/replit_start.sh` (or the equivalent commands run manually): a VPS
-behind a reverse proxy (Caddy/nginx) with an **A record** in GoDaddy
-pointing at the server's IP, or a PaaS host (Render, Railway, Fly.io) with
-the **CNAME record it gives you** added in GoDaddy. Set `CORS_ORIGINS` to
-your domain only if you ever split the frontend and backend into separate
-services again - the single-process setup above doesn't need it.
+The same `Dockerfile` runs identically on Railway, Fly.io, a plain VPS
+with Docker installed, or anywhere else that runs containers — `render.yaml`
+is Render-specific wiring, but the image itself isn't locked to Render.
+For a VPS, add an **A record** in GoDaddy pointing at the server's IP; for
+another PaaS, add the **CNAME it gives you**, same as step 6 above.
 
 ## 5. Running tests
 

@@ -1,0 +1,27 @@
+# Render "Blueprint" - lets Render auto-configure this service from this
+# file alone: New -> Blueprint -> pick this repo -> Apply. You only need to
+# type in the two secret values it asks for (ADMIN_PASSWORD, and
+# ANTHROPIC_API_KEY if you want live mode) - everything else is automatic.
+services:
+  - type: web
+    name: recordbridge
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/status
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+
+    # The free plan has no persistent disk - uploaded files and the SQLite
+    # database reset on every redeploy/restart. Once you're past trying it
+    # out, upgrade `plan` to `starter` (or higher) and uncomment this block
+    # so real data survives restarts:
+    # disk:
+    #   name: data
+    #   mountPath: /data
+    #   sizeGB: 1
