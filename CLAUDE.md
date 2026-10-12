@@ -27,8 +27,21 @@ decision to expand scope.
 ## Architecture
 
 - **Frontend:** React + TypeScript + Vite (`frontend/`). Plain fetch-based
-  API client (`src/api.ts`), no state-management library. 7 screens under
-  `src/pages/`.
+  API client (`src/api.ts`), no state-management library. 7 reviewer
+  screens under `src/pages/` (lazy-loaded after login), plus the public
+  `Landing` page and `Login`.
+  - **Brand:** logo assets live in `frontend/public/brand/` (white and navy
+    transparent PNGs of the mark and wordmark, plus app icons), rendered via
+    `src/components/Brand.tsx`. Brand navy is `#022e60` (sampled from the
+    logo) — use it rather than inventing new navies.
+  - **Landing page** (`src/pages/Landing.tsx`, `src/landing/`): scroll-driven
+    sections (rAF-throttled scroll progress → CSS variables / SVG
+    transforms, no animation library). Everything must still read correctly
+    with `prefers-reduced-motion: reduce` (static fallbacks already exist —
+    keep them working). Marketing copy follows the same rules as the
+    product: no compliance/airworthiness claims, no invented metrics, and
+    illustrations must not depict features the product doesn't have (e.g.
+    no bounding-box highlights on documents).
 - **Backend:** FastAPI + SQLAlchemy + SQLite (`backend/`).
   - `app/extraction/` — provider-agnostic extraction interface
     (`provider.py`), a `demo` implementation (`demo_provider.py`, fixture

@@ -1,18 +1,22 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
 import { api } from './api'
 import type { ApiStatus } from './types'
 import { AuthProvider, useAuth } from './AuthContext'
 import RequireAuth from './components/RequireAuth'
+import { BrandWordmark } from './components/Brand'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
-import ProjectList from './pages/ProjectList'
-import ProjectOverview from './pages/ProjectOverview'
-import DocumentsPage from './pages/DocumentsPage'
-import DocumentViewer from './pages/DocumentViewer'
-import FindingsList from './pages/FindingsList'
-import FindingDetail from './pages/FindingDetail'
-import ExportScreen from './pages/ExportScreen'
+
+// The reviewer app (incl. the heavy PDF viewer) loads only after login, so the
+// public landing page stays light.
+const ProjectList = lazy(() => import('./pages/ProjectList'))
+const ProjectOverview = lazy(() => import('./pages/ProjectOverview'))
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
+const DocumentViewer = lazy(() => import('./pages/DocumentViewer'))
+const FindingsList = lazy(() => import('./pages/FindingsList'))
+const FindingDetail = lazy(() => import('./pages/FindingDetail'))
+const ExportScreen = lazy(() => import('./pages/ExportScreen'))
 
 function AppShell({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<ApiStatus | null>(null)
@@ -31,10 +35,10 @@ function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell">
       <header className="top-nav">
-        <div className="brand">
-          RecordBridge
+        <NavLink to="/projects" className="brand" aria-label="RecordBridge projects">
+          <BrandWordmark height={22} />
           <span className="tagline">Human-reviewed technical records assistant</span>
-        </div>
+        </NavLink>
         <nav>
           <NavLink to="/projects" end>
             Projects
@@ -67,6 +71,7 @@ export default function App() {
           element={
             <RequireAuth>
               <AppShell>
+                <Suspense fallback={<div className="page loading-state">Loading…</div>}>
                 <Routes>
                   <Route path="/projects" element={<ProjectList />} />
                   <Route path="/projects/:projectId" element={<ProjectOverview />} />
@@ -76,6 +81,7 @@ export default function App() {
                   <Route path="/projects/:projectId/findings/:findingId" element={<FindingDetail />} />
                   <Route path="/projects/:projectId/export" element={<ExportScreen />} />
                 </Routes>
+                </Suspense>
               </AppShell>
             </RequireAuth>
           }

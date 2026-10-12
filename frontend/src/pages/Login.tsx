@@ -2,6 +2,10 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { ApiError } from '../api'
+import { BrandMark } from '../components/Brand'
+import { PlaneSvg } from '../landing/Plane'
+import { useDarkPageBackground } from './Landing'
+import '../landing/landing.css'
 
 export default function Login() {
   const { loading, authEnabled, authenticated, login } = useAuth()
@@ -10,6 +14,7 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  useDarkPageBackground()
 
   if (!loading && (!authEnabled || authenticated)) {
     const from = (location.state as { from?: { pathname?: string } } | null)?.from
@@ -37,34 +42,52 @@ export default function Login() {
   }
 
   return (
-    <div className="landing">
-      <div className="landing-bg" aria-hidden="true" />
-      <header className="landing-nav">
-        <Link to="/" className="landing-brand">
-          RecordBridge
+    <div className="lp">
+      <header className="lp-nav">
+        <Link to="/" className="lp-nav-brand" aria-label="RecordBridge home">
+          <BrandMark size={30} />
+          <span className="lp-nav-name">RecordBridge</span>
         </Link>
       </header>
 
-      <main className="login-card-wrap">
-        <form className="login-card" onSubmit={handleSubmit}>
-          <h1>Enter workspace</h1>
-          <p className="subtitle">This workspace is private. Enter the access password to continue.</p>
+      <main className="lp-login">
+        <div className="lp-sky" aria-hidden="true">
+          <div className="lp-stars" />
+          <div className="lp-cloud c1" />
+          <div className="lp-cloud c3" />
+          <div className="lp-flightline f2">
+            <div className="lp-flyer">
+              <span className="lp-contrail" />
+              <PlaneSvg size={30} className="lp-flyer-plane" />
+            </div>
+          </div>
+        </div>
 
-          {error && <div className="error-banner">{error}</div>}
+        <form className="lp-login-card" onSubmit={handleSubmit}>
+          <BrandMark size={56} className="lp-login-mark" />
+          <h1>Enter workspace</h1>
+          <p className="lp-login-sub">This workspace is private. Enter the access password to continue.</p>
+
+          {error && <div className="lp-login-error">{error}</div>}
 
           <label htmlFor="password">Password</label>
           <input
             id="password"
             type="password"
             autoFocus
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
           />
 
-          <button className="primary large" type="submit" disabled={submitting || !password} style={{ marginTop: 16, width: '100%' }}>
+          <button className="lp-btn lp-btn-primary" type="submit" disabled={submitting || !password}>
             {submitting ? 'Checking…' : 'Enter'}
           </button>
+
+          <Link to="/" className="lp-login-back">
+            ← Back to RecordBridge
+          </Link>
         </form>
       </main>
     </div>
