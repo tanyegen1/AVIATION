@@ -1,12 +1,12 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
-import { api } from './api'
-import type { ApiStatus } from './types'
-import { AuthProvider, useAuth } from './AuthContext'
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { AuthProvider } from './AuthContext'
 import RequireAuth from './components/RequireAuth'
-import { BrandWordmark } from './components/Brand'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
+import AppShell from './shell/AppShell'
+import { FeedbackProvider } from './ui/feedback'
+import { Skeleton } from './ui/primitives'
 
 // The reviewer app (incl. the heavy PDF viewer) loads only after login, so the
 // public landing page stays light.
@@ -18,75 +18,42 @@ const FindingsList = lazy(() => import('./pages/FindingsList'))
 const FindingDetail = lazy(() => import('./pages/FindingDetail'))
 const ExportScreen = lazy(() => import('./pages/ExportScreen'))
 
-function AppShell({ children }: { children: React.ReactNode }) {
-  const [status, setStatus] = useState<ApiStatus | null>(null)
-  const { authEnabled, logout } = useAuth()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    api.status().then(setStatus).catch(() => setStatus(null))
-  }, [])
-
-  async function handleLogout() {
-    await logout()
-    navigate('/login', { replace: true })
-  }
-
-  return (
-    <div className="app-shell">
-      <header className="top-nav">
-        <NavLink to="/projects" className="brand" aria-label="RecordBridge projects">
-          <BrandWordmark height={22} />
-          <span className="tagline">Human-reviewed technical records assistant</span>
-        </NavLink>
-        <nav>
-          <NavLink to="/projects" end>
-            Projects
-          </NavLink>
-        </nav>
-        {status && (
-          <span className={`mode-pill ${status.live_mode_available ? 'live' : ''}`}>
-            {status.live_mode_available ? `Live mode ready (${status.live_model})` : 'Demo mode only - no API key configured'}
-          </span>
-        )}
-        {authEnabled && (
-          <button className="small" onClick={handleLogout}>
-            Log out
-          </button>
-        )}
-      </header>
-      {children}
-    </div>
-  )
-}
-
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/*"
-          element={
-            <RequireAuth>
-              <AppShell>
-                <Suspense fallback={<div className="page loading-state">Loading…</div>}>
-                <Routes>
-                  <Route path="/projects" element={<ProjectList />} />
-                  <Route path="/projects/:projectId" element={<ProjectOverview />} />
-                  <Route path="/projects/:projectId/documents" element={<DocumentsPage />} />
-                  <Route path="/projects/:projectId/documents/:documentId" element={<DocumentViewer />} />
-                  <Route path="/projects/:projectId/findings" element={<FindingsList />} />
-                  <Route path="/projects/:projectId/findings/:findingId" element={<FindingDetail />} />
-                  <Route path="/projects/:projectId/export" element={<ExportScreen />} />
-                </Routes>
-                </Suspense>
-              </AppShell>
-            </RequireAuth>
-          }
-        />
-      </Routes>
+      <FeedbackProvider>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/*"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <Suspense
+                    fallback={
+                      <div className="page">
+                        <Skeleton lines={4} />
+                      </div>
+                    }
+                  >
+                    <Routes>
+                      <Route path="/projects" element={<ProjectList />} />
+                      <Route path="/projects/:projectId" element={<ProjectOverview />} />
+                      <Route path="/projects/:projectId/documents" element={<DocumentsPage />} />
+                      <Route path="/projects/:projectId/documents/:documentId" element={<DocumentViewer />} />
+                      <Route path="/projects/:projectId/findings" element={<FindingsList />} />
+                      <Route path="/projects/:projectId/findings/:findingId" element={<FindingDetail />} />
+                      <Route path="/projects/:projectId/export" element={<ExportScreen />} />
+                      <Route path="*" element={<Navigate to="/projects" replace />} />
+                    </Routes>
+                  </Suspense>
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+        </Routes>
+      </FeedbackProvider>
     </AuthProvider>
   )
 }

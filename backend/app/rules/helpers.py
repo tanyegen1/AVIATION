@@ -6,6 +6,7 @@ from datetime import date, datetime
 
 from sqlalchemy.orm import Session
 
+from app.current_fields import current_fields
 from app.models import Document, ExtractedField
 
 
@@ -19,15 +20,7 @@ class FieldRef:
 
 def primary_field(session: Session, document_id: str, field_name: str) -> FieldRef | None:
     """Earliest-page, non-null effective value for a field on a document."""
-    rows = (
-        session.query(ExtractedField)
-        .filter(
-            ExtractedField.document_id == document_id,
-            ExtractedField.field_name == field_name,
-        )
-        .order_by(ExtractedField.page_number.asc().nullslast())
-        .all()
-    )
+    rows = _current_named(session, document_id, field_name)
     for row in rows:
         value = row.effective_value()
         if value is not None and value.strip() != "":
@@ -35,13 +28,13 @@ def primary_field(session: Session, document_id: str, field_name: str) -> FieldR
     return None
 
 
+def _current_named(session: Session, document_id: str, field_name: str) -> list[ExtractedField]:
+    rows = [f for f in current_fields(session, document_id) if f.field_name == field_name]
+    return sorted(rows, key=lambda f: (f.page_number is None, f.page_number or 0))
+
+
 def all_date_fields(session: Session, document_id: str) -> list[ExtractedField]:
-    return (
-        session.query(ExtractedField)
-        .filter(ExtractedField.document_id == document_id, ExtractedField.field_name == "date")
-        .order_by(ExtractedField.page_number.asc().nullslast())
-        .all()
-    )
+    return _current_named(session, document_id, "date")
 
 
 def representative_document_date(session: Session, document_id: str) -> tuple[date, FieldRef] | None:

@@ -101,13 +101,18 @@ def check_conflicting_identity_values(
                         affected_document_ids=[match.document_id_a, match.document_id_b],
                         affected_field_ids=[ref_a.field_id, ref_b.field_id],
                         evidence=[
-                            {"document_id": match.document_id_a, "page_number": ref_a.page_number, "excerpt": ref_a.evidence_text},
-                            {"document_id": match.document_id_b, "page_number": ref_b.page_number, "excerpt": ref_b.evidence_text},
+                            {"document_id": match.document_id_a, "field_id": ref_a.field_id, "page_number": ref_a.page_number, "excerpt": ref_a.evidence_text},
+                            {"document_id": match.document_id_b, "field_id": ref_b.field_id, "page_number": ref_b.page_number, "excerpt": ref_b.evidence_text},
                         ],
                         dedup_key=f"conflicting_identity_values|{match.id}|{field_name}",
                     )
                 )
     return drafts
+
+
+def _doc_label(session: Session, document_id: str) -> str:
+    doc = session.get(Document, document_id)
+    return doc.original_filename if doc else document_id
 
 
 def _check_decreasing_usage(
@@ -156,15 +161,17 @@ def _check_decreasing_usage(
                     severity="discrepancy",
                     title=f"Decreasing cumulative {usage_field.replace('_', ' ')}",
                     explanation=(
-                        f"The earlier record ({earlier_doc}) reports {earlier_num} and the later "
-                        f"record ({later_doc}) reports {later_num} {usage_field.replace('_', ' ')}, "
+                        f"The earlier record ({_doc_label(session, earlier_doc)}, dated "
+                        f"{min(da, db).isoformat()}) reports {earlier_num:g} and the later record "
+                        f"({_doc_label(session, later_doc)}, dated {max(da, db).isoformat()}) reports "
+                        f"{later_num:g} {usage_field.replace('_', ' ')}, "
                         f"both measured '{basis_a.value}'. Cumulative usage should not decrease over time."
                     ),
                     affected_document_ids=[match.document_id_a, match.document_id_b],
                     affected_field_ids=[earlier_ref.field_id, later_ref.field_id],
                     evidence=[
-                        {"document_id": earlier_doc, "page_number": earlier_ref.page_number, "excerpt": earlier_ref.evidence_text},
-                        {"document_id": later_doc, "page_number": later_ref.page_number, "excerpt": later_ref.evidence_text},
+                        {"document_id": earlier_doc, "field_id": earlier_ref.field_id, "page_number": earlier_ref.page_number, "excerpt": earlier_ref.evidence_text},
+                        {"document_id": later_doc, "field_id": later_ref.field_id, "page_number": later_ref.page_number, "excerpt": later_ref.evidence_text},
                     ],
                     dedup_key=f"{rule_id}|{match.id}",
                 )
@@ -217,8 +224,8 @@ def check_expected_document_missing(
                     affected_document_ids=[sheet.id],
                     affected_field_ids=[pn.field_id, sn.field_id],
                     evidence=[
-                        {"document_id": sheet.id, "page_number": pn.page_number, "excerpt": pn.evidence_text},
-                        {"document_id": sheet.id, "page_number": sn.page_number, "excerpt": sn.evidence_text},
+                        {"document_id": sheet.id, "field_id": pn.field_id, "page_number": pn.page_number, "excerpt": pn.evidence_text},
+                        {"document_id": sheet.id, "field_id": sn.field_id, "page_number": sn.page_number, "excerpt": sn.evidence_text},
                     ],
                     dedup_key=f"expected_document_missing|{sheet.id}|{pn.value}|{sn.value}",
                 )

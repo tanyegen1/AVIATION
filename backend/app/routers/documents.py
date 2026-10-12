@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import MAX_PAGE_COUNT, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB
 from app.db import get_db
-from app.models import Document, ExtractedField, ExtractionRun, ProcessingJob
+from app.models import ComponentMatch, Document, ExtractedField, ExtractionRun, Finding, ProcessingJob
 from app.pdf_utils import PdfValidationError, validate_and_inspect
 from app.routers.projects import _get_project_or_404
 from app.schemas import DocumentCategoryUpdate
-from app.serializers import document_out
+from app.serializers import document_out, job_out
 from app.storage import document_path, save_upload
 
 router = APIRouter(tags=["documents"])
@@ -73,7 +76,21 @@ def list_documents(project_id: str, db: Session = Depends(get_db)):
         .order_by(Document.uploaded_at.desc())
         .all()
     )
-    return [document_out(d) for d in docs]
+    return [_document_with_job(db, d) for d in docs]
+
+
+def _document_with_job(db: Session, doc: Document) -> dict:
+    """Document plus its most recent processing job, so the UI can show live
+    progress without a request per row."""
+    latest = (
+        db.query(ProcessingJob)
+        .filter(ProcessingJob.document_id == doc.id)
+        .order_by(ProcessingJob.created_at.desc())
+        .first()
+    )
+    out = document_out(doc)
+    out["latest_job"] = job_out(latest) if latest else None
+    return out
 
 
 def _get_document_or_404(db: Session, document_id: str) -> Document:
@@ -85,7 +102,7 @@ def _get_document_or_404(db: Session, document_id: str) -> Document:
 
 @router.get("/api/documents/{document_id}")
 def get_document(document_id: str, db: Session = Depends(get_db)):
-    return document_out(_get_document_or_404(db, document_id))
+    return _document_with_job(db, _get_document_or_404(db, document_id))
 
 
 @router.get("/api/documents/{document_id}/file")
@@ -117,9 +134,40 @@ def delete_document(document_id: str, db: Session = Depends(get_db)):
     path = document_path(doc.project_id, doc.storage_filename)
     path.unlink(missing_ok=True)
 
+    project_id = doc.project_id
+
+    # Later uploads of the same file were flagged as duplicates of this one.
+    # The earliest of them takes over as the original (processable again);
+    # any others now point at it.
+    duplicates = (
+        db.query(Document)
+        .filter(Document.duplicate_of_document_id == document_id)
+        .order_by(Document.uploaded_at)
+        .all()
+    )
+    if duplicates:
+        successor, *rest = duplicates
+        successor.duplicate_of_document_id = None
+        successor.status = "uploaded"
+        for d in rest:
+            d.duplicate_of_document_id = successor.id
+
+    # Component matches can't outlive either side of the pair. Findings that
+    # cited this document stay on record for audit but need re-review.
+    db.query(ComponentMatch).filter(
+        or_(ComponentMatch.document_id_a == document_id, ComponentMatch.document_id_b == document_id)
+    ).delete(synchronize_session=False)
+    for finding in db.query(Finding).filter(Finding.project_id == project_id, Finding.status.in_(["open", "confirmed"])):
+        if document_id in json.loads(finding.affected_document_ids_json or "[]"):
+            finding.stale = True
+
     db.query(ExtractedField).filter(ExtractedField.document_id == document_id).delete(synchronize_session=False)
     db.query(ExtractionRun).filter(ExtractionRun.document_id == document_id).delete(synchronize_session=False)
     db.query(ProcessingJob).filter(ProcessingJob.document_id == document_id).delete(synchronize_session=False)
     db.delete(doc)
     db.commit()
+
+    from app.rules.engine import run_rules_for_project
+
+    run_rules_for_project(db, project_id)
     return {"deleted": True}

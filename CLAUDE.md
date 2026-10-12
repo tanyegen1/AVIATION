@@ -30,6 +30,18 @@ decision to expand scope.
   API client (`src/api.ts`), no state-management library. 7 reviewer
   screens under `src/pages/` (lazy-loaded after login), plus the public
   `Landing` page and `Login`.
+  - **App shell + UI kit:** every reviewer page renders inside
+    `src/shell/AppShell.tsx` (sidebar with per-section counts, breadcrumbs,
+    persistent Demo/Live label, mobile bottom tab bar). Pages read the
+    current project and its `/summary` counts via `useShell()` and call
+    `refreshProject()` after any change that affects counts. Shared
+    primitives live in `src/ui/` (`Button`, `PageHeader`, `Callout`,
+    `EmptyState`, `Progress`, `Skeleton`, `Icon` — SVG icons, no emoji).
+    Use `useFeedback()` for toasts and confirmation dialogs — never
+    `window.alert`/`window.confirm`.
+  - **Deep links:** the document viewer honours `?page=N&field=<id>`
+    (opens that page and highlights the field). Finding evidence carries
+    `field_id` so "Open page" lands on the exact cited field.
   - **Brand:** logo assets live in `frontend/public/brand/` (white and navy
     transparent PNGs of the mark and wordmark, plus app icons), rendered via
     `src/components/Brand.tsx`. Brand navy is `#022e60` (sampled from the
@@ -80,6 +92,15 @@ decision to expand scope.
   path - see README section 4.5. `scripts/replit_start.sh` is a lighter
   alternative entry point (installs + builds + runs the same way without
   Docker) for a single-process host that isn't Docker-based.
+
+- **Current fields:** a document can be processed more than once. Old
+  extraction runs are kept as history, but everything reviewer-facing
+  (viewer, rules, summary, export) uses `app/current_fields.py`: for each
+  page, the fields from the newest run that actually processed that page.
+  Never query `ExtractedField` directly for "the" value of a field.
+- **Deleting a document** removes its component matches, promotes the
+  earliest duplicate upload to an ordinary (processable) document, marks
+  open/confirmed findings that cited it `stale`, and re-runs the rules.
 
 ## Non-negotiable rules
 

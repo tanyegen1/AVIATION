@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Document, Project
+from app.current_fields import current_fields_for_project
+from app.models import ComponentMatch, Document, Finding, Project
 from app.schemas import ProjectCreate, ProjectUpdate
 from app.serializers import project_out
 from app.storage import delete_project_files
@@ -43,6 +44,50 @@ def get_project(project_id: str, db: Session = Depends(get_db)):
     project = _get_project_or_404(db, project_id)
     count = db.query(Document).filter(Document.project_id == project.id).count()
     return project_out(project, document_count=count)
+
+
+@router.get("/{project_id}/summary")
+def get_project_summary(project_id: str, db: Session = Depends(get_db)):
+    """Counts derived directly from the project's records - nothing estimated."""
+    _get_project_or_404(db, project_id)
+
+    docs = db.query(Document.status).filter(Document.project_id == project_id).all()
+    doc_statuses = [d.status for d in docs]
+
+    field_rows = current_fields_for_project(db, project_id)
+    findings = db.query(Finding.status, Finding.severity, Finding.stale).filter(Finding.project_id == project_id).all()
+    matches = db.query(ComponentMatch.status).filter(ComponentMatch.project_id == project_id).all()
+
+    by_severity: dict[str, int] = {}
+    for f in findings:
+        if f.status == "open":
+            by_severity[f.severity] = by_severity.get(f.severity, 0) + 1
+
+    return {
+        "documents": {
+            "total": len(doc_statuses),
+            "processed": doc_statuses.count("processed"),
+            "failed": doc_statuses.count("failed"),
+            "active": sum(1 for s in doc_statuses if s in ("queued", "processing")),
+            "duplicate": doc_statuses.count("duplicate"),
+            "unprocessed": doc_statuses.count("uploaded"),
+        },
+        "fields": {
+            "total": len(field_rows),
+            "reviewed": sum(1 for r in field_rows if r.review_status != "unreviewed"),
+        },
+        "findings": {
+            "total": len(findings),
+            "open": sum(1 for f in findings if f.status == "open"),
+            "stale": sum(1 for f in findings if f.stale and f.status in ("open", "confirmed")),
+            "open_by_severity": by_severity,
+        },
+        "matches": {
+            "suggested": sum(1 for m in matches if m.status == "suggested"),
+            "confirmed": sum(1 for m in matches if m.status == "confirmed"),
+            "rejected": sum(1 for m in matches if m.status == "rejected"),
+        },
+    }
 
 
 @router.patch("/{project_id}")

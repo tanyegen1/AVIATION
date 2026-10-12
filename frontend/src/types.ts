@@ -32,6 +32,7 @@ export interface Document {
   duplicate_of_document_id: string | null
   error_message: string | null
   uploaded_at: string
+  latest_job?: ProcessingJob | null
 }
 
 export interface FailedPage {
@@ -97,6 +98,7 @@ export interface ComponentMatch {
 
 export interface FindingEvidence {
   document_id: string
+  field_id?: string
   page_number: number | null
   excerpt: string | null
 }
@@ -125,4 +127,11 @@ export interface ApiStatus {
   live_mode_available: boolean
   live_model: string | null
   auth_enabled: boolean
+}
+
+export interface ProjectSummary {
+  documents: { total: number; processed: number; failed: number; active: number; duplicate: number; unprocessed: number }
+  fields: { total: number; reviewed: number }
+  findings: { total: number; open: number; stale: number; open_by_severity: Record<string, number> }
+  matches: { suggested: number; confirmed: number; rejected: number }
 }

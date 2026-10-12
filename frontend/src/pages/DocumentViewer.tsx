@@ -1,232 +1,361 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../api'
-import type { Document, ExtractedField, ProcessingJob } from '../types'
-import ProjectTabs from '../components/ProjectTabs'
-import { StatusBadge, EvidenceBadge } from '../components/Badges'
+import { EvidenceBadge, StatusBadge } from '../components/Badges'
 import PdfViewer from '../components/PdfViewer'
+import { useShell } from '../shell/AppShell'
+import type { Document, ExtractedField } from '../types'
+import { Icon } from '../ui/Icon'
+import { useFeedback } from '../ui/feedback'
+import { Button, Callout, EmptyState, PageHeader, Skeleton } from '../ui/primitives'
+
+const GROUPS: { title: string; names: string[] }[] = [
+  { title: 'Identity', names: ['aircraft_registration', 'part_number', 'serial_number', 'component_description'] },
+  { title: 'Usage', names: ['flight_hours', 'flight_cycles', 'usage_basis'] },
+  { title: 'Dates', names: ['date'] },
+  { title: 'Maintenance', names: ['maintenance_action', 'work_order_reference', 'organization'] },
+]
+
+const ACTIVE = new Set(['queued', 'processing'])
 
 export default function DocumentViewer() {
   const { projectId, documentId } = useParams<{ projectId: string; documentId: string }>()
+  const [params, setParams] = useSearchParams()
+  const { refreshProject } = useShell()
+  const { toast } = useFeedback()
   const [doc, setDoc] = useState<Document | null>(null)
-  const [fields, setFields] = useState<ExtractedField[]>([])
-  const [jobs, setJobs] = useState<ProcessingJob[]>([])
-  const [page, setPage] = useState(1)
+  const [fields, setFields] = useState<ExtractedField[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [scope, setScope] = useState<'page' | 'all'>('page')
 
-  function load() {
+  const targetField = params.get('field')
+  const page = Math.max(1, Number(params.get('page')) || 1)
+
+  const setPage = useCallback(
+    (p: number) => {
+      const next = new URLSearchParams(params)
+      next.set('page', String(p))
+      next.delete('field')
+      setParams(next, { replace: true })
+    },
+    [params, setParams],
+  )
+
+  const load = useCallback(() => {
     if (!documentId) return
-    Promise.all([api.getDocument(documentId), api.listFields(documentId), api.listJobs(documentId)])
-      .then(([d, f, j]) => {
+    Promise.all([api.getDocument(documentId), api.listFields(documentId)])
+      .then(([d, f]) => {
         setDoc(d)
         setFields(f)
-        setJobs(j)
       })
       .catch((e) => setError(e instanceof ApiError ? e.message : 'Failed to load document.'))
-  }
+  }, [documentId])
 
-  useEffect(load, [documentId])
+  useEffect(load, [load])
 
-  async function handleCategoryChange(category: string) {
+  // Keep refreshing while this document is still being processed.
+  const active = doc ? ACTIVE.has(doc.status) : false
+  useEffect(() => {
+    if (!active) return
+    const t = window.setInterval(load, 1500)
+    return () => window.clearInterval(t)
+  }, [active, load])
+
+  // Deep link from a finding: ?field=<id> jumps to that field's page.
+  useEffect(() => {
+    if (!targetField || !fields) return
+    const f = fields.find((x) => x.id === targetField)
+    if (f?.page_number && f.page_number !== page) {
+      const next = new URLSearchParams(params)
+      next.set('page', String(f.page_number))
+      setParams(next, { replace: true })
+    }
+  }, [targetField, fields, page, params, setParams])
+
+  async function changeCategory(category: string) {
     if (!documentId) return
-    await api.updateDocumentCategory(documentId, category)
-    load()
+    try {
+      await api.updateDocumentCategory(documentId, category)
+      toast('success', 'Category updated', 'Checks were re-run for this project.')
+      refreshProject()
+      load()
+    } catch (e) {
+      toast('error', 'Could not update category', e instanceof ApiError ? e.message : undefined)
+    }
   }
 
-  if (error) return <div className="page"><div className="error-banner">{error}</div></div>
-  if (!doc || !projectId) return <div className="page loading-state">Loading…</div>
+  const visible = useMemo(
+    () => (fields ?? []).filter((f) => scope === 'all' || f.page_number === page),
+    [fields, scope, page],
+  )
 
-  const latestJob = jobs[0]
+  if (error) {
+    return (
+      <div className="page">
+        <div className="card">
+          <EmptyState
+            icon="alertCircle"
+            title={error}
+            action={
+              <Link to={`/projects/${projectId}/documents`} className="btn btn-secondary btn-md">
+                <Icon name="chevronLeft" size={16} /> Back to documents
+              </Link>
+            }
+          >
+            It may have been deleted from this project.
+          </EmptyState>
+        </div>
+      </div>
+    )
+  }
+  if (!doc || !fields) {
+    return (
+      <div className="page page-wide">
+        <Skeleton lines={6} />
+      </div>
+    )
+  }
+
+  const job = doc.latest_job
+  const reviewed = fields.filter((f) => f.review_status !== 'unreviewed').length
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <div>
-          <h1>{doc.original_filename}</h1>
-          <div className="subtitle">
-            <StatusBadge status={doc.status} /> · {doc.page_count ?? '?'} pages ·{' '}
-            {doc.is_scanned ? 'contains scanned pages' : 'digital text'}
-          </div>
-        </div>
-      </div>
-      <ProjectTabs projectId={projectId} />
-
-      <div className="card" style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div>
-          <label>Document category</label>
-          <select value={doc.document_category} onChange={(e) => handleCategoryChange(e.target.value)} style={{ width: 240 }}>
-            <option value="unknown_type">Unknown / unclassified</option>
-            <option value="component_status_sheet">Component status sheet</option>
-            <option value="maintenance_release_record">Maintenance / release record</option>
-          </select>
-          <div className="field-meta">
-            Source: {doc.category_source === 'manual' ? 'manually set' : doc.category_source === 'ai_suggested' ? 'AI-suggested (confirm if correct)' : 'not yet classified'}
-          </div>
-        </div>
-        {latestJob && (
-          <div>
-            <label>Last processing run</label>
-            <div style={{ fontSize: 13 }}>
-              <StatusBadge status={latestJob.status} /> · {latestJob.pages_processed} processed, {latestJob.pages_failed} failed
-              {latestJob.mode === 'demo' && <span className="badge" style={{ marginLeft: 6 }}>demo-simulated</span>}
-            </div>
-            {latestJob.error_message && <div className="field-meta">{latestJob.error_message}</div>}
-            {latestJob.failed_pages.length > 0 && (
-              <div className="field-meta">
-                Failed pages: {latestJob.failed_pages.map((fp) => `${fp.page} (${fp.reason})`).join('; ')}
-              </div>
+    <div className="page page-wide">
+      <PageHeader
+        eyebrow={
+          <>
+            <StatusBadge status={doc.status} />
+            <span>
+              {doc.page_count ?? '?'} page{doc.page_count === 1 ? '' : 's'} · {doc.is_scanned ? 'contains scanned pages' : 'digital text'}
+            </span>
+            {job && (
+              <span>
+                · last run {job.pages_processed}/{job.page_end - job.page_start + 1} pages
+                {job.pages_failed > 0 && `, ${job.pages_failed} failed`}
+                {job.mode === 'demo' && ' · demo-simulated'}
+              </span>
             )}
+          </>
+        }
+        title={doc.original_filename}
+        actions={
+          <div style={{ minWidth: 240 }}>
+            <label className="field-label" htmlFor="category">
+              Document category
+            </label>
+            <select id="category" value={doc.document_category} onChange={(e) => changeCategory(e.target.value)}>
+              <option value="unknown_type">Unknown / unclassified</option>
+              <option value="component_status_sheet">Component status sheet</option>
+              <option value="maintenance_release_record">Maintenance / release record</option>
+            </select>
+            <div className="field-help">
+              {doc.category_source === 'manual'
+                ? 'Set manually.'
+                : doc.category_source === 'ai_suggested'
+                  ? 'Suggested by extraction — confirm it is right.'
+                  : 'Not classified yet.'}
+            </div>
           </div>
-        )}
-      </div>
+        }
+      />
 
-      <div className="split-view">
+      {active && (
+        <Callout tone="info" title="Processing in progress">
+          Fields appear here as each page finishes.
+        </Callout>
+      )}
+      {job?.failed_pages && job.failed_pages.length > 0 && (
+        <Callout tone="danger" title="Some pages failed to process">
+          {job.failed_pages.map((fp) => `Page ${fp.page}: ${fp.reason}`).join(' · ')}
+        </Callout>
+      )}
+      {doc.status === 'failed' && doc.error_message && (
+        <Callout tone="danger" title="Processing failed">
+          {doc.error_message}
+        </Callout>
+      )}
+
+      <div className="viewer-layout">
         <PdfViewer fileUrl={api.documentFileUrl(doc.id)} page={page} onPage={setPage} />
 
-        <div className="card" style={{ margin: 0 }}>
-          <h3>Extracted fields — page {page}</h3>
-          <FieldList fields={fields.filter((f) => f.page_number === page)} onChange={load} onJump={setPage} />
-          <details style={{ marginTop: 16 }}>
-            <summary style={{ cursor: 'pointer', color: 'var(--muted)', fontSize: 12 }}>
-              Show all fields across all pages ({fields.length})
-            </summary>
-            <div style={{ marginTop: 10 }}>
-              <FieldList fields={fields} onChange={load} onJump={setPage} showPage />
+        <div className="card fields-panel">
+          <div className="card-head">
+            <div>
+              <h3>Extracted fields</h3>
+              <div className="muted" style={{ fontSize: 12.5 }}>
+                {reviewed} of {fields.length} reviewed
+              </div>
             </div>
-          </details>
+            <div className="chips">
+              <button className={`chip ${scope === 'page' ? 'is-on' : ''}`} onClick={() => setScope('page')}>
+                Page {page}
+              </button>
+              <button className={`chip ${scope === 'all' ? 'is-on' : ''}`} onClick={() => setScope('all')}>
+                All pages <span className="chip-count">{fields.length}</span>
+              </button>
+            </div>
+          </div>
+
+          {visible.length === 0 ? (
+            <EmptyState icon="file" title={fields.length === 0 ? 'No fields extracted yet' : `Nothing extracted on page ${page}`}>
+              {fields.length === 0
+                ? 'Process this document from the Documents screen to extract its fields.'
+                : 'Try another page, or switch to “All pages”.'}
+            </EmptyState>
+          ) : (
+            GROUPS.map((g) => {
+              const items = visible.filter((f) => g.names.includes(f.field_name))
+              if (!items.length) return null
+              return (
+                <div key={g.title}>
+                  <div className="field-group-title">{g.title}</div>
+                  {items.map((f) => (
+                    <FieldCard
+                      key={f.id}
+                      field={f}
+                      showPage={scope === 'all'}
+                      isTarget={f.id === targetField}
+                      onJump={setPage}
+                      onChanged={() => {
+                        refreshProject()
+                        load()
+                      }}
+                    />
+                  ))}
+                </div>
+              )
+            })
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-function FieldList({
-  fields,
-  onChange,
-  onJump,
-  showPage,
-}: {
-  fields: ExtractedField[]
-  onChange: () => void
-  onJump: (p: number) => void
-  showPage?: boolean
-}) {
-  if (fields.length === 0) {
-    return <p className="subtitle">No fields extracted for this page yet.</p>
-  }
-  return (
-    <div>
-      {fields.map((f) => (
-        <FieldRow key={f.id} field={f} onChange={onChange} onJump={onJump} showPage={showPage} />
-      ))}
-    </div>
-  )
-}
-
-function FieldRow({
+function FieldCard({
   field,
-  onChange,
-  onJump,
   showPage,
+  isTarget,
+  onJump,
+  onChanged,
 }: {
   field: ExtractedField
-  onChange: () => void
+  showPage: boolean
+  isTarget: boolean
   onJump: (p: number) => void
-  showPage?: boolean
+  onChanged: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(field.corrected_value ?? field.effective_value ?? '')
   const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const { toast } = useFeedback()
 
-  async function save() {
-    await api.correctField(field.id, value.trim() === '' ? null : value.trim(), note.trim() || undefined)
-    setEditing(false)
-    onChange()
+  useEffect(() => {
+    if (isTarget) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [isTarget])
+
+  const label = (field.qualifier ? `${field.field_name} · ${field.qualifier}` : field.field_name).replace(/_/g, ' ')
+
+  async function run(action: () => Promise<unknown>, success: string) {
+    setBusy(true)
+    try {
+      await action()
+      toast('success', success, label)
+      setEditing(false)
+      onChanged()
+    } catch (e) {
+      toast('error', 'Could not save', e instanceof ApiError ? e.message : undefined)
+    } finally {
+      setBusy(false)
+    }
   }
-
-  async function confirm() {
-    await api.confirmField(field.id)
-    onChange()
-  }
-
-  async function flagUnreadable() {
-    await api.flagFieldUnreadable(field.id, note.trim() || undefined)
-    onChange()
-  }
-
-  const label = field.qualifier ? `${field.field_name} (${field.qualifier})` : field.field_name
 
   return (
-    <div className="field-row">
-      <div>
-        <div className="field-name">{label.replace(/_/g, ' ')}</div>
-        {showPage && (
-          <div className="field-meta">
-            <a onClick={() => onJump(field.page_number ?? 1)} style={{ cursor: 'pointer' }}>
-              page {field.page_number ?? '?'}
-            </a>
-          </div>
-        )}
-        <div className="field-meta">
-          <StatusBadge status={field.review_status} />
+    <div ref={ref} className={`field-card ${isTarget ? 'is-target' : ''}`}>
+      <div className="field-top">
+        <div className="field-name">
+          {label}
+          {showPage && field.page_number && (
+            <button className="chip" style={{ height: 22, padding: '0 8px', fontSize: 11 }} onClick={() => onJump(field.page_number!)}>
+              p.{field.page_number}
+            </button>
+          )}
         </div>
-      </div>
-      <div>
-        {!editing ? (
-          <>
-            <div>
-              {field.effective_value ?? <em style={{ color: 'var(--muted)' }}>null (unreadable / not present)</em>}
-            </div>
-            {field.review_status === 'corrected' && (
-              <div className="field-meta">original AI value: {field.raw_value ?? 'null'}</div>
-            )}
-            {field.evidence_text && <div className="field-meta">Evidence: “{field.evidence_text}”</div>}
-            <div style={{ marginTop: 4 }}>
-              <EvidenceBadge verification={field.evidence_verification} />
-              {field.self_reported_confidence && (
-                <span className="badge" style={{ marginLeft: 6 }}>
-                  model confidence label: {field.self_reported_confidence}
-                </span>
-              )}
-            </div>
-          </>
-        ) : (
-          <div>
-            <input type="text" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Corrected value" />
-            <input
-              type="text"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Reviewer note (optional)"
-              style={{ marginTop: 6 }}
-            />
+        {!editing && (
+          <div className="field-actions">
+            <button
+              className="icon-btn is-success"
+              title="Confirm value"
+              aria-label="Confirm value"
+              disabled={busy || field.review_status === 'confirmed'}
+              onClick={() => run(() => api.confirmField(field.id), 'Field confirmed')}
+            >
+              <Icon name="check" />
+            </button>
+            <button className="icon-btn" title="Correct value" aria-label="Correct value" disabled={busy} onClick={() => setEditing(true)}>
+              <Icon name="edit" />
+            </button>
+            <button
+              className="icon-btn is-warning"
+              title="Flag as unreadable"
+              aria-label="Flag as unreadable"
+              disabled={busy || field.review_status === 'flagged_unreadable'}
+              onClick={() => run(() => api.flagFieldUnreadable(field.id), 'Flagged as unreadable')}
+            >
+              <Icon name="flag" />
+            </button>
           </div>
         )}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {!editing ? (
-          <>
-            <button className="small" onClick={() => setEditing(true)}>
-              Correct
-            </button>
-            <button className="small" onClick={confirm}>
-              Confirm
-            </button>
-            <button className="small" onClick={flagUnreadable}>
-              Flag unreadable
-            </button>
-          </>
-        ) : (
-          <>
-            <button className="small primary" onClick={save}>
-              Save
-            </button>
-            <button className="small" onClick={() => setEditing(false)}>
+
+      {!editing ? (
+        <>
+          <div className={`field-value ${field.effective_value === null ? 'is-null' : ''}`}>
+            {field.effective_value ?? (field.review_status === 'flagged_unreadable' ? 'Flagged unreadable' : 'Not readable — left empty')}
+          </div>
+          {field.review_status === 'corrected' && (
+            <div className="field-original">
+              Original extracted value: <s>{field.raw_value ?? 'empty'}</s>
+              {field.corrected_note && ` · “${field.corrected_note}”`}
+            </div>
+          )}
+          {field.evidence_text && <div className="field-evidence">“{field.evidence_text}”</div>}
+          <div className="field-tags">
+            <StatusBadge status={field.review_status} />
+            <EvidenceBadge verification={field.evidence_verification} />
+            {field.self_reported_confidence && (
+              <span className="badge" title="The model's own label — not a measured probability">
+                model label: {field.self_reported_confidence}
+              </span>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="field-edit">
+          <input type="text" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Corrected value" autoFocus />
+          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reviewer note (optional)" />
+          <div className="muted" style={{ fontSize: 12 }}>
+            The original extracted value is kept on record. Findings that cite this field will be marked for re-review.
+          </div>
+          <div className="field-edit-actions">
+            <Button size="sm" onClick={() => setEditing(false)}>
               Cancel
-            </button>
-          </>
-        )}
-      </div>
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              loading={busy}
+              onClick={() =>
+                run(() => api.correctField(field.id, value.trim() === '' ? null : value.trim(), note.trim() || undefined), 'Correction saved')
+              }
+            >
+              Save correction
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -7,6 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.config import MAX_PAGES_PER_JOB, live_mode_available
+from app.current_fields import current_fields
 from app.db import SessionLocal, get_db
 from app.jobs import run_job
 from app.models import ComponentMatch, Document, ExtractedField, Finding, ProcessingJob
@@ -107,12 +108,7 @@ def cancel_job(job_id: str, db: Session = Depends(get_db)):
 @router.get("/api/documents/{document_id}/fields")
 def list_fields(document_id: str, db: Session = Depends(get_db)):
     _get_document_or_404(db, document_id)
-    fields = (
-        db.query(ExtractedField)
-        .filter(ExtractedField.document_id == document_id)
-        .order_by(ExtractedField.page_number.asc().nullslast(), ExtractedField.field_name.asc())
-        .all()
-    )
+    fields = sorted(current_fields(db, document_id), key=lambda f: (f.page_number or 0, f.field_name))
     return [field_out(f) for f in fields]
 
 

@@ -1,153 +1,211 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, ApiError } from '../api'
-import type { Document, Finding, Project } from '../types'
-import ProjectTabs from '../components/ProjectTabs'
 import { StatusBadge } from '../components/Badges'
+import { useShell } from '../shell/AppShell'
+import type { Document } from '../types'
+import { Icon } from '../ui/Icon'
+import { useFeedback } from '../ui/feedback'
+import { Button, EmptyState, PageHeader, Progress, Skeleton, timeAgo } from '../ui/primitives'
 
 export default function ProjectOverview() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
-  const [project, setProject] = useState<Project | null>(null)
-  const [documents, setDocuments] = useState<Document[]>([])
-  const [findings, setFindings] = useState<Finding[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const { project, summary, refreshProject } = useShell()
+  const { toast, confirm } = useFeedback()
+  const [documents, setDocuments] = useState<Document[] | null>(null)
+  const [savingSetting, setSavingSetting] = useState(false)
 
-  function load() {
+  useEffect(() => {
     if (!projectId) return
-    Promise.all([api.getProject(projectId), api.listDocuments(projectId), api.listFindings(projectId)])
-      .then(([p, docs, f]) => {
-        setProject(p)
-        setDocuments(docs)
-        setFindings(f)
-      })
-      .catch((e) => setError(e instanceof ApiError ? e.message : 'Failed to load project.'))
-  }
-
-  useEffect(load, [projectId])
+    api.listDocuments(projectId).then(setDocuments).catch(() => setDocuments([]))
+  }, [projectId])
 
   async function toggleSetting() {
     if (!project) return
-    const updated = await api.updateProject(project.id, {
-      require_maintenance_release_for_status_sheets: !project.require_maintenance_release_for_status_sheets,
-    })
-    setProject(updated)
-    await api.rerunRules(project.id)
-    load()
+    setSavingSetting(true)
+    try {
+      await api.updateProject(project.id, {
+        require_maintenance_release_for_status_sheets: !project.require_maintenance_release_for_status_sheets,
+      })
+      await api.rerunRules(project.id)
+      refreshProject()
+      toast('success', 'Review template updated', 'Checks were re-run with the new setting.')
+    } catch (e) {
+      toast('error', 'Could not update setting', e instanceof ApiError ? e.message : undefined)
+    } finally {
+      setSavingSetting(false)
+    }
   }
 
   async function handleDelete() {
     if (!project) return
+    const ok = await confirm({
+      title: `Delete “${project.name}”?`,
+      body: 'This permanently removes every uploaded file and all extraction and review data in this project. It cannot be undone.',
+      confirmLabel: 'Delete project',
+      tone: 'danger',
+    })
+    if (!ok) return
     await api.deleteProject(project.id)
-    navigate('/')
+    toast('success', 'Project deleted')
+    navigate('/projects')
   }
 
-  if (error) return <div className="page"><div className="error-banner">{error}</div></div>
-  if (!project) return <div className="page loading-state">Loading…</div>
+  if (!project || !summary) {
+    return (
+      <div className="page">
+        <Skeleton lines={5} />
+      </div>
+    )
+  }
 
-  const processed = documents.filter((d) => d.status === 'processed').length
-  const failed = documents.filter((d) => d.status === 'failed').length
-  const openFindings = findings.filter((f) => f.status === 'open').length
-  const staleFindings = findings.filter((f) => f.stale).length
+  const s = summary
+  const reviewedPct = s.fields.total ? s.fields.reviewed / s.fields.total : 0
 
   return (
     <div className="page">
-      <div className="page-header">
-        <div>
-          <h1>{project.name}</h1>
-          <div className="subtitle">{project.description || 'No description.'}</div>
+      <PageHeader
+        eyebrow={
+          <>
+            <Icon name="clock" size={13} /> Created {timeAgo(project.created_at)}
+          </>
+        }
+        title={project.name}
+        subtitle={project.description || undefined}
+        actions={
+          <Button variant="primary" icon="upload" onClick={() => navigate(`/projects/${project.id}/documents`)}>
+            Upload documents
+          </Button>
+        }
+      />
+
+      <div className="stat-grid">
+        <div className="card stat">
+          <div className="stat-label">
+            <Icon name="file" size={14} /> Documents
+          </div>
+          <div className="stat-value">{s.documents.total}</div>
+          <div className="stat-sub">
+            {s.documents.processed} processed
+            {s.documents.failed > 0 && ` · ${s.documents.failed} failed`}
+            {s.documents.active > 0 && ` · ${s.documents.active} processing`}
+          </div>
+        </div>
+        <div className="card stat">
+          <div className="stat-label">
+            <Icon name="checkCircle" size={14} /> Fields reviewed
+          </div>
+          <div className="stat-value">
+            {s.fields.reviewed}
+            <span className="faint" style={{ fontSize: 16 }}> / {s.fields.total}</span>
+          </div>
+          <Progress value={reviewedPct} tone="success" />
+        </div>
+        <div className="card stat">
+          <div className="stat-label">
+            <Icon name="link" size={14} /> Matches to confirm
+          </div>
+          <div className="stat-value">{s.matches.suggested}</div>
+          <div className="stat-sub">
+            {s.matches.confirmed} confirmed · {s.matches.rejected} rejected
+          </div>
+        </div>
+        <div className="card stat">
+          <div className="stat-label">
+            <Icon name="alert" size={14} /> Open findings
+          </div>
+          <div className="stat-value">{s.findings.open}</div>
+          <div className="stat-sub">
+            {s.findings.stale > 0 ? `${s.findings.stale} need re-review` : `${s.findings.total} total`}
+          </div>
         </div>
       </div>
-      <ProjectTabs projectId={project.id} />
 
+      <div className="section-title">
+        <h2>Recent documents</h2>
+        <Link to={`/projects/${project.id}/documents`} className="muted">
+          View all →
+        </Link>
+      </div>
       <div className="card">
-        <h2>Processing status</h2>
-        <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-          <Stat label="Documents" value={documents.length} />
-          <Stat label="Processed" value={processed} />
-          <Stat label="Failed" value={failed} />
-          <Stat label="Open findings" value={openFindings} />
-          <Stat label="Stale findings (need re-review)" value={staleFindings} />
-        </div>
+        {documents === null ? (
+          <div className="card-pad">
+            <Skeleton lines={3} />
+          </div>
+        ) : documents.length === 0 ? (
+          <EmptyState
+            icon="upload"
+            title="No documents yet"
+            action={
+              <Button variant="primary" icon="upload" onClick={() => navigate(`/projects/${project.id}/documents`)}>
+                Upload documents
+              </Button>
+            }
+          >
+            Upload component status sheets or maintenance/release records (PDF) to start.
+          </EmptyState>
+        ) : (
+          <ul className="doc-list">
+            {documents.slice(0, 5).map((d) => (
+              <li key={d.id} className="doc-item" style={{ gridTemplateColumns: 'minmax(0,1fr) auto' }}>
+                <div className="doc-main">
+                  <div className="doc-icon">
+                    <Icon name="file" />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <Link to={`/projects/${project.id}/documents/${d.id}`} className="doc-name">
+                      {d.original_filename}
+                    </Link>
+                    <div className="doc-meta">
+                      <span>{d.document_category.replace(/_/g, ' ')}</span>
+                      <span className="dot">{timeAgo(d.uploaded_at)}</span>
+                    </div>
+                  </div>
+                </div>
+                <StatusBadge status={d.status} />
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      <div className="card">
-        <h2>Review template settings</h2>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 10, textTransform: 'none', fontWeight: 400 }}>
+      <div className="section-title">
+        <h2>Review template</h2>
+      </div>
+      <div className="card card-pad">
+        <label className="check-row">
           <input
             type="checkbox"
-            style={{ width: 'auto' }}
             checked={project.require_maintenance_release_for_status_sheets}
             onChange={toggleSetting}
+            disabled={savingSetting}
           />
-          Require a maintenance/release record for every component status sheet uploaded to this project
+          <span>
+            <strong>Require a maintenance/release record for every component status sheet</strong>
+            <br />
+            <span className="muted" style={{ fontSize: 13 }}>
+              When on, a status sheet with no release record sharing its part number and serial number is flagged
+              for review. Changing this re-runs the checks.
+            </span>
+          </span>
         </label>
-        <p className="subtitle" style={{ marginTop: 8 }}>
-          When enabled, a status sheet with no matching release record (by part number + serial number) will be
-          flagged for review.
-        </p>
       </div>
 
-      <div className="card">
-        <h2>Recent documents</h2>
-        {documents.length === 0 ? (
-          <div className="empty-state">
-            <div className="icon">📄</div>
-            <p>No documents uploaded yet.</p>
-            <button className="primary" onClick={() => navigate(`/projects/${project.id}/documents`)}>
-              Upload documents
-            </button>
-          </div>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Filename</th>
-                <th>Category</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.slice(0, 6).map((d) => (
-                <tr key={d.id} onClick={() => navigate(`/projects/${project.id}/documents/${d.id}`)} style={{ cursor: 'pointer' }}>
-                  <td>{d.original_filename}</td>
-                  <td>{d.document_category.replace(/_/g, ' ')}</td>
-                  <td><StatusBadge status={d.status} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      <div className="card">
+      <div className="section-title">
         <h2>Danger zone</h2>
-        <p className="subtitle">
-          Deleting a project permanently removes its uploaded files and all derived extraction/review data.
-        </p>
-        {!confirmingDelete ? (
-          <button className="danger" onClick={() => setConfirmingDelete(true)}>
-            Delete project
-          </button>
-        ) : (
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button className="danger" onClick={handleDelete}>
-              Confirm delete
-            </button>
-            <button onClick={() => setConfirmingDelete(false)}>Cancel</button>
-          </div>
-        )}
       </div>
-    </div>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div>
-      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--navy)' }}>{value}</div>
-      <div style={{ fontSize: 12, color: 'var(--muted)' }}>{label}</div>
+      <div className="card card-pad danger-zone" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <strong>Delete this project</strong>
+          <div className="muted" style={{ fontSize: 13 }}>
+            Permanently removes its uploaded files and all derived extraction and review data.
+          </div>
+        </div>
+        <Button variant="danger" icon="trash" onClick={handleDelete}>
+          Delete project
+        </Button>
+      </div>
     </div>
   )
 }

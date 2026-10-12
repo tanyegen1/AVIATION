@@ -25,8 +25,9 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 from sqlalchemy.orm import Session
 
 from app.config import EXTRACTION_SCHEMA_VERSION, RULES_ENGINE_VERSION
+from app.current_fields import current_fields_for_project
 from app.db import get_db
-from app.models import ComponentMatch, Document, ExtractedField, Finding, ProcessingJob, RuleRun
+from app.models import ComponentMatch, Document, Finding, ProcessingJob, RuleRun
 from app.routers.projects import _get_project_or_404
 
 router = APIRouter(tags=["export"])
@@ -57,12 +58,7 @@ def _gather_report_data(db: Session, project_id: str, include_dismissed: bool):
     for f in all_findings:
         if f.status in ("open",) or f.stale:
             unresolved.append(f)
-    flagged_fields = (
-        db.query(ExtractedField)
-        .join(Document)
-        .filter(Document.project_id == project_id, ExtractedField.review_status == "flagged_unreadable")
-        .all()
-    )
+    flagged_fields = [f for f in current_fields_for_project(db, project_id) if f.review_status == "flagged_unreadable"]
     suggested_matches = [m for m in matches if m.status == "suggested"]
 
     return {

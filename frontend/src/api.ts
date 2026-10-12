@@ -6,6 +6,7 @@ import type {
   Finding,
   Project,
   ProcessingJob,
+  ProjectSummary,
 } from './types'
 
 export class ApiError extends Error {
@@ -55,6 +56,7 @@ export const api = {
   createProject: (name: string, description?: string) =>
     request<Project>('/api/projects', json({ name, description })),
   getProject: (id: string) => request<Project>(`/api/projects/${id}`),
+  projectSummary: (id: string) => request<ProjectSummary>(`/api/projects/${id}/summary`),
   updateProject: (id: string, body: Partial<Pick<Project, 'name' | 'description' | 'require_maintenance_release_for_status_sheets'>>) =>
     request<Project>(`/api/projects/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteProject: (id: string) => request<{ deleted: boolean }>(`/api/projects/${id}`, { method: 'DELETE' }),
