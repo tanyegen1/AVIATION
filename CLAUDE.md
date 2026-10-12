@@ -55,6 +55,13 @@ decision to expand scope.
 - **Storage:** uploaded PDFs live under `backend/storage/<project_id>/`,
   outside anything served as static content. Never move this under a
   path a web server would serve directly.
+- **Single-origin serving:** `app/main.py` serves `frontend/dist/` (once
+  built) as a static SPA from the same FastAPI process, behind every
+  `/api/*` route. This lets a single-process host (e.g. Replit, via
+  `scripts/replit_start.sh`) run the whole app on one port with no CORS
+  setup. Keep the catch-all route registered **last**, after every router,
+  and keep its `api/` prefix guard (returns 404, not `index.html`, for
+  unknown API paths) so it never shadows a real endpoint.
 
 ## Non-negotiable rules
 

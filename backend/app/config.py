@@ -22,6 +22,13 @@ STORAGE_DIR = Path(os.environ.get("STORAGE_DIR", BACKEND_DIR / "storage")).resol
 DB_PATH = Path(os.environ.get("DB_PATH", BACKEND_DIR / "aviation_records.db")).resolve()
 FIXTURES_DIR = BACKEND_DIR / "fixtures"
 
+# Built frontend (frontend/dist, produced by `npm run build`). When present,
+# the backend serves it directly as a single-origin SPA - this is what lets
+# a single-process host (e.g. Replit) run the whole app behind one port and
+# one custom domain, with no separate static hosting or CORS setup needed.
+# Absent in local dev (where Vite's own dev server + proxy is used instead).
+FRONTEND_DIST_DIR = Path(os.environ.get("FRONTEND_DIST_DIR", REPO_ROOT / "frontend" / "dist")).resolve()
+
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5").strip()
 

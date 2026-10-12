@@ -163,7 +163,29 @@ real dev servers:
 
 All 7 steps behaved as expected.
 
-## 4. Live mode
+## 4. Single-origin production serving (Replit-style deployment)
+
+Built the frontend (`npm run build`) and ran **only the backend** (no Vite
+dev server) with `HOST=0.0.0.0 ADMIN_PASSWORD=... uvicorn app.main:app`,
+to confirm the single-process setup `scripts/replit_start.sh` relies on:
+
+- `GET /api/status` → correct JSON, same as always.
+- `GET /` → serves `frontend/dist/index.html`.
+- `GET /favicon.svg` → `200`, correct content type (static file at dist root).
+- `GET /assets/index-*.js` → `200`, correct JS content type (bundled assets).
+- `GET /login` (a client-side React Router path, not a real file) → `200`,
+  falls back to `index.html` so React Router renders it client-side.
+- `GET /api/does-not-exist` → `404` (not HTML - confirms the SPA fallback
+  never shadows a real but unmatched API path).
+- Full browser run against this single-port setup: landing page loads,
+  login with the real password succeeds, and the authenticated `/projects`
+  screen renders correctly - all through one origin, one port, no CORS.
+
+No automated pytest covers this specific route (it only registers when
+`frontend/dist/` exists at import time, which the test suite's environment
+doesn't build) - this was verified manually as above instead.
+
+## 5. Live mode
 
 **Not tested against the real Anthropic API** — no `ANTHROPIC_API_KEY` was
 available in this environment. See README section 4 for exactly what to do

@@ -129,30 +129,61 @@ This is **one shared password for the whole app**, not per-user accounts —
 good enough to keep casual visitors out of a single-reviewer deployment, not
 a substitute for real multi-tenant authentication (see Known limitations).
 
-**B. Point your domain at the running app.** The concrete steps depend on
-where you host it:
-- **A VPS / your own server:** run the backend (`uvicorn app.main:app --host 0.0.0.0 --port 8000`,
-  behind a reverse proxy like Caddy or nginx that terminates HTTPS), build the
-  frontend (`cd frontend && npm run build`) and serve the `frontend/dist/`
-  folder as static files, with `/api` proxied to the backend on the same
-  domain so cookies work without extra CORS configuration. In GoDaddy's DNS
-  panel for your domain, add an **A record** pointing `@` (and `www`) at your
-  server's IP address (or a **CNAME** if your host gives you a hostname
-  instead of an IP).
-- **A platform-as-a-service host (Render, Railway, Fly.io, etc.):** deploy
-  the backend and frontend as the platform expects (most support a Python
-  web service + a static site from one repo), then in GoDaddy's DNS panel
-  add the **CNAME record the platform tells you to add** for your domain
-  (each platform's dashboard shows the exact record once you add a custom
-  domain there).
+**B. Run it as a single process.** `app/main.py` serves the built frontend
+(`frontend/dist/`) directly once it exists - API and UI share one port and
+one origin, so there's no separate static host and no CORS configuration
+needed. `scripts/replit_start.sh` does exactly this: installs backend
+deps, builds the frontend if needed, and starts `uvicorn` on `0.0.0.0:$PORT`.
+This is what makes a single-process host like Replit work with no
+separate "hosting" purchase.
 
-Either way, set `CORS_ORIGINS` on the backend to include your real domain
-(e.g. `https://recordbridge.ai`) and `COOKIE_SECURE=true` once it's served
-over HTTPS (this is the default already unless `HOST` is loopback - see
-`.env.example`).
+### Deploying on Replit with a custom domain (no separate hosting)
 
-Tell me which hosting platform/account you're using and I'll give you the
-exact deployment commands and the exact DNS records to add in GoDaddy.
+1. On replit.com, **Create App → Import from GitHub** and point it at this
+   repo/branch.
+2. Open the **Secrets** tool (padlock icon) and add:
+   - `ADMIN_PASSWORD` — the access-gate password (see part A above)
+   - `SESSION_SECRET` — any long random string (so logins survive restarts)
+   - `ANTHROPIC_API_KEY` — only if you want live mode (optional)
+3. Set the Repl's **Run command** to:
+   ```
+   bash scripts/replit_start.sh
+   ```
+   (If Replit's UI doesn't offer that option directly because it guessed
+   a different project type on import, open the **Shell** tab instead and
+   run `bash scripts/replit_start.sh` there - same effect, and you can set
+   that same command as the Deployment's run command in step 4.)
+4. Press **Run** once to confirm it builds and starts cleanly (first build
+   takes a few minutes - it's compiling the frontend and installing
+   dependencies), then use Replit's **Deploy** button to publish it
+   (Reserved VM keeps it always-on and keeps the SQLite database on disk
+   between restarts; Autoscale is cheaper but may not persist local disk
+   storage the same way - check what your Replit plan's deployment types
+   guarantee before picking one, since this app writes uploaded PDFs and
+   its database to local disk under `backend/storage/` and `backend/aviation_records.db`).
+5. In the Deployment's **Settings → Custom domain**, add `recordbridge.ai`
+   (and `www.recordbridge.ai` if you want that too). Replit will show you
+   the **exact DNS records to add** (usually a CNAME or A record, plus a
+   TXT record to verify ownership) - these are generated per-deployment,
+   so copy them exactly as Replit shows them.
+6. In GoDaddy, go to your domain's **DNS Management** page and add those
+   exact records (GoDaddy calls this "DNS Records" / "Manage DNS" under
+   the domain, not the separate "DNS Hosting" product). DNS changes can
+   take anywhere from a few minutes to a few hours to propagate.
+
+Once that's live, `COOKIE_SECURE` and the single-origin serving above
+mean no further CORS/cookie configuration is needed - Replit serves
+everything over HTTPS automatically.
+
+### Other hosting options (if you ever move off Replit)
+
+Any host that can run a long-lived process works the same way via
+`scripts/replit_start.sh` (or the equivalent commands run manually): a VPS
+behind a reverse proxy (Caddy/nginx) with an **A record** in GoDaddy
+pointing at the server's IP, or a PaaS host (Render, Railway, Fly.io) with
+the **CNAME record it gives you** added in GoDaddy. Set `CORS_ORIGINS` to
+your domain only if you ever split the frontend and backend into separate
+services again - the single-process setup above doesn't need it.
 
 ## 5. Running tests
 
@@ -199,7 +230,8 @@ frontend/
     components/          PDF viewer, nav tabs, status/severity badges, RequireAuth
     AuthContext.tsx        session state (me/login/logout)
     api.ts / types.ts     typed API client
-scripts/start-mac.sh     one-command local startup
+scripts/start-mac.sh     one-command local startup (two dev servers)
+scripts/replit_start.sh   single-process production startup (Replit or any host)
 CLAUDE.md                 scope, architecture and non-negotiable rules for future AI-assisted work on this repo
 ```
 

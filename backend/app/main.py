@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.auth import require_session
@@ -11,6 +13,7 @@ from app.config import (
     ANTHROPIC_MODEL,
     COOKIE_SECURE,
     CORS_ORIGINS,
+    FRONTEND_DIST_DIR,
     SESSION_SECRET,
     auth_enabled,
     live_mode_available,
@@ -84,3 +87,28 @@ def status():
         "live_model": ANTHROPIC_MODEL if live_mode_available() else None,
         "auth_enabled": auth_enabled(),
     }
+
+
+# --- Single-origin frontend serving (production / single-process hosts) ---
+#
+# In local dev, the frontend runs under its own Vite dev server (proxying
+# /api to this process) and frontend/dist doesn't exist, so none of this
+# registers. Once `npm run build` has produced frontend/dist, this backend
+# serves it directly: one process, one port, one origin - no CORS, no
+# second service to deploy. Registered last so it never shadows an /api/*
+# route above.
+if FRONTEND_DIST_DIR.is_dir():
+    assets_dir = FRONTEND_DIST_DIR / "assets"
+    if assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend-assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found.")
+        candidate = FRONTEND_DIST_DIR / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+        # Client-side routing (React Router): any unrecognized path falls
+        # back to index.html, which then renders the right screen.
+        return FileResponse(FRONTEND_DIST_DIR / "index.html")
