@@ -19,6 +19,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(path, {
     ...options,
+    credentials: 'include',
     headers:
       options.body && !(options.body instanceof FormData)
         ? { 'Content-Type': 'application/json', ...options.headers }
@@ -44,6 +45,11 @@ function json(body: unknown): RequestInit {
 
 export const api = {
   status: () => request<ApiStatus>('/api/status'),
+
+  authMe: () => request<{ authenticated: boolean; auth_enabled: boolean }>('/api/auth/me'),
+  authLogin: (password: string) =>
+    request<{ authenticated: boolean; auth_enabled: boolean }>('/api/auth/login', json({ password })),
+  authLogout: () => request<{ authenticated: boolean }>('/api/auth/logout', { method: 'POST' }),
 
   listProjects: () => request<Project[]>('/api/projects'),
   createProject: (name: string, description?: string) =>

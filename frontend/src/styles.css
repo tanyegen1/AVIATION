@@ -475,6 +475,260 @@ tr:hover td {
   background: var(--accent);
 }
 
+/* ---------- Landing / Login ---------- */
+
+.landing {
+  position: relative;
+  min-height: 100%;
+  background: #060b16;
+  color: #eef2f8;
+  overflow-x: hidden;
+}
+
+.landing-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(60vw 60vh at 15% 10%, rgba(37, 99, 235, 0.35), transparent 60%),
+    radial-gradient(50vw 50vh at 90% 25%, rgba(16, 185, 129, 0.18), transparent 60%),
+    radial-gradient(70vw 70vh at 50% 100%, rgba(10, 37, 64, 0.9), transparent 70%),
+    linear-gradient(180deg, #060b16 0%, #0a1526 100%);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1) translateY(0);
+  }
+  to {
+    transform: scale(1.06) translateY(-1.5%);
+  }
+}
+
+.landing-nav,
+.landing-hero,
+.landing-features,
+.landing-flow,
+.landing-footer,
+.login-card-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.landing-brand {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
+
+.landing-hero {
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 72px 24px 56px;
+}
+
+.landing-eyebrow {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8fb2ff;
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 22px;
+}
+
+.landing-hero h1 {
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.12;
+  margin: 0 0 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 30%, #bcd3ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-sub {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: #aab8cc;
+  max-width: 620px;
+  margin: 0 auto 32px;
+}
+
+.landing-cta {
+  margin-bottom: 20px;
+}
+
+.btn.primary.large {
+  padding: 13px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+}
+
+.landing-disclaimer {
+  font-size: 12px;
+  color: #6b7993;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.landing-features {
+  max-width: 1080px;
+  margin: 40px auto 0;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+}
+
+.landing-feature-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 22px 20px;
+  backdrop-filter: blur(6px);
+}
+
+.landing-feature-card h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #fff;
+}
+
+.landing-feature-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #9aa8c0;
+}
+
+.landing-flow {
+  max-width: 720px;
+  margin: 72px auto 40px;
+  padding: 0 24px;
+}
+
+.landing-flow h2 {
+  font-size: 22px;
+  color: #fff;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.landing-flow ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.landing-flow li {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.landing-flow li div {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #aab8cc;
+}
+
+.landing-flow li strong {
+  color: #fff;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-footer {
+  text-align: center;
+  padding: 40px 24px 56px;
+  font-size: 12px;
+  color: #5a6880;
+}
+
+.login-card-wrap {
+  min-height: calc(100vh - 90px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 36px 32px;
+  backdrop-filter: blur(10px);
+}
+
+.login-card h1 {
+  color: #fff;
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.login-card .subtitle {
+  color: #93a1b8;
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+
+.login-card label {
+  color: #93a1b8;
+}
+
+.login-card input[type='password'] {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.login-card input[type='password']:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .footer-note {
   color: var(--muted);
   font-size: 11.5px;

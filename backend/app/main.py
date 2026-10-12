@@ -2,13 +2,22 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
-from app.config import ANTHROPIC_MODEL, CORS_ORIGINS, live_mode_available
+from app.auth import require_session
+from app.config import (
+    ANTHROPIC_MODEL,
+    COOKIE_SECURE,
+    CORS_ORIGINS,
+    SESSION_SECRET,
+    auth_enabled,
+    live_mode_available,
+)
 from app.db import SessionLocal, init_db
 from app.models import Document, ExtractedField, ProcessingJob
-from app.routers import documents, export, processing, projects
+from app.routers import auth, documents, export, processing, projects
 
 
 def _recover_interrupted_jobs() -> None:
@@ -49,11 +58,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    session_cookie="ar_session",
+    same_site="lax",
+    https_only=COOKIE_SECURE,
+    max_age=60 * 60 * 24 * 14,  # 14 days
+)
 
-app.include_router(projects.router)
-app.include_router(documents.router)
-app.include_router(processing.router)
-app.include_router(export.router)
+# /api/auth/* and /api/status are intentionally public - everything else
+# requires a valid session once ADMIN_PASSWORD is configured (see app/auth.py).
+app.include_router(auth.router)
+app.include_router(projects.router, dependencies=[Depends(require_session)])
+app.include_router(documents.router, dependencies=[Depends(require_session)])
+app.include_router(processing.router, dependencies=[Depends(require_session)])
+app.include_router(export.router, dependencies=[Depends(require_session)])
 
 
 @app.get("/api/status")
@@ -62,4 +82,5 @@ def status():
         "demo_mode_available": True,
         "live_mode_available": live_mode_available(),
         "live_model": ANTHROPIC_MODEL if live_mode_available() else None,
+        "auth_enabled": auth_enabled(),
     }

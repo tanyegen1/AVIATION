@@ -46,6 +46,12 @@ decision to expand scope.
     startup). Deliberately not a distributed queue — this is a
     single-user local app.
   - `app/routers/` — REST endpoints; `app/serializers.py` — ORM → dict.
+  - `app/auth.py` + `app/routers/auth.py` — an **opt-in** single
+    shared-password session gate (`ADMIN_PASSWORD` env var), for deployments
+    reachable beyond localhost. Disabled by default (local dev). This is
+    **not** per-user accounts, roles, or tenant isolation — never describe
+    it as such in UI copy or docs; it only keeps casual visitors out of a
+    single-reviewer deployment.
 - **Storage:** uploaded PDFs live under `backend/storage/<project_id>/`,
   outside anything served as static content. Never move this under a
   path a web server would serve directly.

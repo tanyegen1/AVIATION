@@ -89,7 +89,7 @@ def export_csv(project_id: str, db: Session = Depends(get_db)):
     buf = io.StringIO()
     writer = csv.writer(buf)
 
-    writer.writerow(["Aviation Records Workspace - Export"])
+    writer.writerow(["RecordBridge - Export"])
     writer.writerow(["Project", project.name])
     writer.writerow(["Generated at", datetime.utcnow().isoformat() + "Z"])
     writer.writerow(["Extraction schema version", EXTRACTION_SCHEMA_VERSION])
@@ -169,7 +169,7 @@ def _build_pdf(data: dict) -> bytes:
     story = []
 
     project = data["project"]
-    story.append(Paragraph("Aviation Records Workspace", title_style))
+    story.append(Paragraph("RecordBridge", title_style))
     story.append(Paragraph("Review Support Report (not an airworthiness certification)", styles["Heading3"]))
     story.append(Spacer(1, 12))
     story.append(Paragraph(f"<b>Project:</b> {project.name}", normal))

@@ -1,6 +1,8 @@
-# Aviation Records Workspace (MVP)
+# RecordBridge (Aviation Records Workspace MVP)
 
-*Temporary product name.*
+*"Aviation Records Workspace" is the working/technical name used throughout
+this codebase and documentation; "RecordBridge" is the public-facing brand
+shown on the landing page and in exports.*
 
 An AI-assisted workspace for aviation technical-records specialists. Users
 upload maintenance-related PDFs; the system extracts structured fields,
@@ -81,8 +83,8 @@ npm install
 npm run dev
 ```
 
-Both bind to `127.0.0.1` only (spec section 11) — this app must not be
-exposed on a public network interface.
+Both bind to `127.0.0.1` only by default (spec section 11). See section 4.5
+below before exposing this to anything beyond your own machine.
 
 ## 4. Enabling live processing
 
@@ -111,6 +113,47 @@ unit-style check that the shared Pydantic schema validates correctly, but
 an end-to-end live call has not been run. Test it yourself by setting a
 real key and processing a real PDF before relying on it.
 
+## 4.5. Deploying beyond localhost (e.g. a real domain)
+
+This app ships with **no authentication by default** — it assumes a single
+trusted user on their own machine (spec section 2/11). If you deploy it
+somewhere reachable over the internet (a VPS, a managed host, behind your
+own domain), you must do both of these first:
+
+**A. Turn on the access gate.** Set `ADMIN_PASSWORD` (and ideally
+`SESSION_SECRET`, so sessions survive a restart) as real environment
+variables on the server — never commit them, never put them in `backend/.env`
+if that file could end up in a shared image. Once set, every screen and API
+route requires that password via a login page before anything else loads.
+This is **one shared password for the whole app**, not per-user accounts —
+good enough to keep casual visitors out of a single-reviewer deployment, not
+a substitute for real multi-tenant authentication (see Known limitations).
+
+**B. Point your domain at the running app.** The concrete steps depend on
+where you host it:
+- **A VPS / your own server:** run the backend (`uvicorn app.main:app --host 0.0.0.0 --port 8000`,
+  behind a reverse proxy like Caddy or nginx that terminates HTTPS), build the
+  frontend (`cd frontend && npm run build`) and serve the `frontend/dist/`
+  folder as static files, with `/api` proxied to the backend on the same
+  domain so cookies work without extra CORS configuration. In GoDaddy's DNS
+  panel for your domain, add an **A record** pointing `@` (and `www`) at your
+  server's IP address (or a **CNAME** if your host gives you a hostname
+  instead of an IP).
+- **A platform-as-a-service host (Render, Railway, Fly.io, etc.):** deploy
+  the backend and frontend as the platform expects (most support a Python
+  web service + a static site from one repo), then in GoDaddy's DNS panel
+  add the **CNAME record the platform tells you to add** for your domain
+  (each platform's dashboard shows the exact record once you add a custom
+  domain there).
+
+Either way, set `CORS_ORIGINS` on the backend to include your real domain
+(e.g. `https://recordbridge.ai`) and `COOKIE_SECURE=true` once it's served
+over HTTPS (this is the default already unless `HOST` is loopback - see
+`.env.example`).
+
+Tell me which hosting platform/account you're using and I'll give you the
+exact deployment commands and the exact DNS records to add in GoDaddy.
+
 ## 5. Running tests
 
 ```bash
@@ -119,14 +162,15 @@ source .venv/bin/activate
 python -m pytest -q
 ```
 
-24 tests cover: the rules engine (consistent pairs, missing identifiers,
+28 tests cover: the rules engine (consistent pairs, missing identifiers,
 distinct-component non-merging, decreasing-usage discrepancies, the
 different-usage-basis non-false-positive, unreadable fields, expected-document-missing),
 duplicate detection, the correction/confirm/flag-unreadable reviewer
 workflow (including that a correction marks dependent findings stale),
 processing failures (a failed page must never look like a clean review),
-and both export formats. All 24 currently pass locally in demo mode (see
-[TEST_RESULTS.md](TEST_RESULTS.md) for the latest run's output).
+both export formats, and the access-gate (login/logout, protected routes
+return 401 until authenticated, rate-limited repeated failures). All 28
+currently pass locally (see [TEST_RESULTS.md](TEST_RESULTS.md)).
 
 There is no frontend test suite in this MVP; the UI was exercised manually
 end-to-end (see TEST_RESULTS.md).
@@ -144,14 +188,16 @@ backend/
     jobs.py                processing job execution (batches, retries, cancellation)
     extraction/            provider interface + demo/live implementations + schema
     rules/                  explicit discrepancy checks + matching + engine
-    routers/                 projects / documents / processing / export endpoints
+    routers/                 projects / documents / processing / export / auth endpoints
+    auth.py                   shared-password session gate (opt-in, see section 4.5)
     serializers.py            ORM -> JSON dict helpers
   fixtures/                synthetic demo PDFs + generator script + expected results
   tests/                     pytest suite
 frontend/
   src/
-    pages/              the 7 required screens
-    components/          PDF viewer, nav tabs, status/severity badges
+    pages/              the 7 required screens + Landing (public) + Login
+    components/          PDF viewer, nav tabs, status/severity badges, RequireAuth
+    AuthContext.tsx        session state (me/login/logout)
     api.ts / types.ts     typed API client
 scripts/start-mac.sh     one-command local startup
 CLAUDE.md                 scope, architecture and non-negotiable rules for future AI-assisted work on this repo
@@ -162,10 +208,12 @@ CLAUDE.md                 scope, architecture and non-negotiable rules for futur
 - **Live mode was implemented but not exercised against the real API** in
   this environment (see section 4). The demo-mode pipeline (upload →
   process → review → correct → export) was fully tested end to end.
-- **Single-user, local only.** There is no authentication, no per-user
-  accounts, and no tenant isolation. `HOST` defaults to `127.0.0.1`; do not
-  change this to `0.0.0.0` or deploy it on a shared network without adding
-  real auth, isolation, and a security review first.
+- **Single shared password, not real multi-user auth.** Setting
+  `ADMIN_PASSWORD` (section 4.5) gates the whole app behind one login
+  screen — there are still no per-user accounts, no roles, no audit trail
+  of who reviewed what, and no tenant isolation. `HOST` defaults to
+  `127.0.0.1`; only change it, and only set `ADMIN_PASSWORD`, when you
+  intend to deploy beyond your own machine.
 - **No frontend automated tests.** Manual verification only (see
   TEST_RESULTS.md for the exact steps run and their outcome).
 - **Scanned-page evidence is not pixel-verified.** For a scanned page, the

@@ -4,6 +4,7 @@ sqlalchemy==2.0.43
 pydantic==2.13.5
 python-multipart==0.0.17
 python-dotenv==1.0.1
+itsdangerous==2.2.0
 pymupdf==1.28.2
 anthropic==1.13.0
 reportlab==5.0.1

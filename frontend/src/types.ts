@@ -124,4 +124,5 @@ export interface ApiStatus {
   demo_mode_available: boolean
   live_mode_available: boolean
   live_model: string | null
+  auth_enabled: boolean
 }

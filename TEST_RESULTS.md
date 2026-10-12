@@ -1,6 +1,6 @@
 # Test Results
 
-Last run: 2026-10-09, in this repository's dev container (demo mode only -
+Last run: 2026-10-12, in this repository's dev container (demo mode only -
 no `ANTHROPIC_API_KEY` was available in this environment).
 
 ## 1. Backend test suite (pytest)
@@ -9,9 +9,13 @@ no `ANTHROPIC_API_KEY` was available in this environment).
 cd backend && source .venv/bin/activate && python -m pytest -v
 ```
 
-**Result: 24 passed, 0 failed.**
+**Result: 28 passed, 0 failed.**
 
 ```
+tests/test_auth.py::test_status_reports_auth_enabled PASSED
+tests/test_auth.py::test_protected_routes_require_login_once_enabled PASSED
+tests/test_auth.py::test_login_rate_limited_after_repeated_failures PASSED
+tests/test_auth.py::test_document_file_download_requires_auth PASSED
 tests/test_corrections.py::test_correction_preserves_original_value PASSED
 tests/test_corrections.py::test_confirm_field PASSED
 tests/test_corrections.py::test_flag_unreadable_counts_as_missing_for_rules PASSED
@@ -37,7 +41,7 @@ tests/test_rules.py::test_unreadable_field_is_null_not_guessed PASSED
 tests/test_rules.py::test_expected_document_missing_only_when_required PASSED
 tests/test_rules.py::test_no_findings_message_is_not_a_compliance_claim PASSED
 
-24 passed, 237 warnings in 2.98s
+28 passed, 239 warnings in 3.22s
 ```
 
 (Warnings are all `datetime.utcnow()` deprecation notices from SQLAlchemy's
@@ -45,6 +49,14 @@ column defaults on Python 3.13 — cosmetic, not failures.)
 
 ### What's covered
 
+- **Access gate** (`ADMIN_PASSWORD` set): `/api/status` reports whether the
+  gate is on; every protected route returns `401` until a session logs in;
+  a wrong password never grants access; repeated failures (5 in the
+  tracked window) are rate-limited with `429`, blocking even the correct
+  password until the window clears; logging out immediately re-blocks
+  protected routes; file downloads are covered by the same gate as every
+  other route. With `ADMIN_PASSWORD` unset (the local-dev default used by
+  every other test below), the gate is a no-op by design.
 - **Rules engine**: consistent record pair → no findings; missing required
   identifier → flagged; two distinct components → never auto-merged;
   decreasing flight-hours with the *same* usage basis → flagged only after
@@ -132,7 +144,26 @@ Screenshots from this run are available in this session's working
 materials; they are not committed to the repository (they're a point-in-time
 verification artifact, not part of the product).
 
-## 3. Live mode
+## 3. Access gate manual run (landing page + login)
+
+Run with `ADMIN_PASSWORD` set on the backend, via Playwright against the
+real dev servers:
+
+1. **Landing page** (`/`) loads with no authentication required.
+2. **Direct navigation to `/projects`** while logged out → redirected to
+   `/login`.
+3. **Wrong password** → "Incorrect password." shown, still redirected to
+   login, no access granted.
+4. **Correct password** → logged in, redirected to `/projects`, the app
+   loads normally.
+5. **Page reload** → session persists (cookie-based), no re-login needed.
+6. **Log out** (button in the top nav) → redirected to `/login`.
+7. **Direct navigation to `/projects` after logout** → blocked again,
+   redirected to `/login`.
+
+All 7 steps behaved as expected.
+
+## 4. Live mode
 
 **Not tested against the real Anthropic API** — no `ANTHROPIC_API_KEY` was
 available in this environment. See README section 4 for exactly what to do
