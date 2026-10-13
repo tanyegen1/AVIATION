@@ -73,6 +73,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const hasDetail = rest.split('/').filter(Boolean).length > 1
   const base = projectId ? `/projects/${projectId}` : ''
 
+  // Tab title: "Findings · Project name — RecordBridge".
+  useEffect(() => {
+    const section = projectId ? (hasDetail && sectionKey === 'documents' ? 'Review' : SECTION_LABEL[sectionKey]) : 'Projects'
+    const parts = [section, projectId ? project?.name : undefined].filter(Boolean)
+    document.title = `${parts.join(' · ')} — RecordBridge`
+  }, [projectId, sectionKey, hasDetail, project?.name])
+
   const items: { to: string; label: string; icon: IconName; end?: boolean; count?: number; tone?: string; hint?: string }[] = projectId
     ? [
         { to: base, label: 'Overview', icon: 'grid', end: true },
@@ -92,6 +99,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
   return (
     <ShellContext.Provider value={{ status, project, summary, refreshProject }}>
       <div className="shell">
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         <aside className="sidebar">
           <Link to="/projects" className="sidebar-brand">
             <BrandMark size={26} />
@@ -191,7 +201,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main className="shell-content">{children}</main>
+          <main className="shell-content" id="main-content" tabIndex={-1}>
+            {children}
+          </main>
         </div>
 
         {projectId && (

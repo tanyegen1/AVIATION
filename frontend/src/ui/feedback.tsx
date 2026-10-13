@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon, type IconName } from './Icon'
 import { Button } from './primitives'
@@ -110,10 +110,46 @@ export function Modal({
   width?: number
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  // Captured during the first render — before an autoFocus field inside
+  // the dialog takes focus — so closing returns focus to the opener.
+  const [restoreTo] = useState(() => document.activeElement as HTMLElement | null)
 
+  // Dialog behaviour: Escape closes, Tab stays inside, focus moves in on
+  // open (unless a field already took it via autoFocus) and goes back to
+  // whatever had it before when the dialog closes.
   useEffect(() => {
+    const panel = panelRef.current
+    const focusables = () =>
+      Array.from(
+        panel?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      )
+    if (panel && !panel.contains(document.activeElement)) {
+      const preferred = focusables().find((el) => !el.classList.contains('modal-close'))
+      ;(preferred ?? panel).focus()
+    }
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        onCloseRef.current()
+      } else if (e.key === 'Tab' && panel) {
+        const list = focusables()
+        if (!list.length) return
+        const first = list[0]
+        const last = list[list.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
     }
     document.addEventListener('keydown', onKey)
     const prevOverflow = document.body.style.overflow
@@ -121,14 +157,23 @@ export function Modal({
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
+      if (restoreTo && document.contains(restoreTo)) restoreTo.focus()
     }
-  }, [onClose])
+  }, [restoreTo])
 
   return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: width }} ref={panelRef} role="dialog" aria-modal="true">
+      <div
+        className="modal"
+        style={{ maxWidth: width }}
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
         <div className="modal-head">
-          <h2>{title}</h2>
+          <h2 id={titleId}>{title}</h2>
           <button className="modal-close" onClick={onClose} aria-label="Close">
             <Icon name="x" size={16} />
           </button>

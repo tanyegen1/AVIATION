@@ -187,18 +187,35 @@ source .venv/bin/activate
 python -m pytest -q
 ```
 
-28 tests cover: the rules engine (consistent pairs, missing identifiers,
-distinct-component non-merging, decreasing-usage discrepancies, the
-different-usage-basis non-false-positive, unreadable fields, expected-document-missing),
-duplicate detection, the correction/confirm/flag-unreadable reviewer
-workflow (including that a correction marks dependent findings stale),
-processing failures (a failed page must never look like a clean review),
-both export formats, and the access-gate (login/logout, protected routes
-return 401 until authenticated, rate-limited repeated failures). All 28
-currently pass locally (see [TEST_RESULTS.md](TEST_RESULTS.md)).
+The backend suite covers the rules engine (consistent pairs, missing
+identifiers, distinct-component non-merging, decreasing-usage
+discrepancies, the different-usage-basis non-false-positive, unreadable
+fields, expected-document-missing), duplicate detection and document
+deletion, the correction/confirm/flag-unreadable workflow (corrections
+mark dependent findings stale), reprocessing ("current fields"), match
+decisions and undo, concurrent rule runs, processing failures (a failed
+page must never look like a clean review), both export formats including
+markup characters and non-ASCII names, and the access gate.
 
-There is no frontend test suite in this MVP; the UI was exercised manually
-end-to-end (see TEST_RESULTS.md).
+### End-to-end browser tests
+
+`frontend/e2e/` holds a Playwright suite that drives the real backend
+(demo mode, a throwaway database, a test-only password) serving the built
+frontend:
+
+```bash
+cd frontend
+npx playwright install chromium   # first time on a machine only
+npm run build
+npm run test:e2e
+```
+
+It covers the login gate, upload → process → keyboard review, matches and
+findings decisions, evidence deep links, the report preview, a check that
+a clean project never claims compliance, an automated WCAG 2 A/AA scan
+(axe-core) of every screen, keyboard focus behaviour (skip link, dialog
+focus trap and return), and a 390px phone-width layout check. Results of
+the latest run are in [TEST_RESULTS.md](TEST_RESULTS.md).
 
 ## 6. Project structure
 
@@ -240,8 +257,9 @@ CLAUDE.md                 scope, architecture and non-negotiable rules for futur
   of who reviewed what, and no tenant isolation. `HOST` defaults to
   `127.0.0.1`; only change it, and only set `ADMIN_PASSWORD`, when you
   intend to deploy beyond your own machine.
-- **No frontend automated tests.** Manual verification only (see
-  TEST_RESULTS.md for the exact steps run and their outcome).
+- **Accessibility is checked automatically, not audited.** The e2e suite
+  runs axe-core (WCAG 2 A/AA) on every screen and tests keyboard focus,
+  but no manual screen-reader pass has been done.
 - **Scanned-page evidence is not pixel-verified.** For a scanned page, the
   app labels extracted text as "requires visual verification" rather than
   attempting to prove the excerpt appears in the image (no bounding boxes

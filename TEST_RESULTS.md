@@ -1,5 +1,28 @@
 # Test Results
 
+## Latest run — 2026-10-13 (demo mode; no `ANTHROPIC_API_KEY` available)
+
+| Suite | Command | Result |
+|---|---|---|
+| Backend (pytest) | `cd backend && python -m pytest -q` | **41 passed** |
+| End-to-end (Playwright, Chromium) | `cd frontend && npm run build && npm run test:e2e` | **8 passed**, three consecutive runs |
+| Typecheck + build | `cd frontend && npm run build` | passes |
+| Lint (oxlint) | `cd frontend && npm run lint` | passes (warnings only) |
+
+End-to-end coverage: login gate and 404 for unknown API paths; upload via
+the dropzone (incl. duplicate handling), processing dialog, keyboard review
+(N/C/E, Enter, Escape, ? help); match confirmation and findings decisions
+from the keyboard; evidence deep link to the cited field; report preview
+and PDF download; "no findings from the selected checks" wording with no
+compliance language; axe-core WCAG 2 A/AA scan of landing, login and all
+seven reviewer screens plus the shortcuts dialog (0 serious/critical
+violations); skip link, dialog focus trap and focus return; no horizontal
+overflow at 390px on every screen.
+
+Live mode remains untested against the real API.
+
+The sections below are earlier records, kept for history.
+
 Last run: 2026-10-12, in this repository's dev container (demo mode only -
 no `ANTHROPIC_API_KEY` was available in this environment).
 

@@ -315,7 +315,7 @@ function DocItem({
               {job.cancel_requested && ' · cancelling'}
               <span style={{ marginLeft: 'auto' }}>{job.mode === 'demo' ? 'Demo' : 'Live'}</span>
             </div>
-            <Progress value={total ? done / total : 0} />
+            <Progress value={total ? done / total : 0} label={`Processing ${doc.original_filename}`} />
           </>
         ) : (
           <>
@@ -330,7 +330,7 @@ function DocItem({
             </div>
             {doc.review && doc.review.total > 0 && (
               <div className="doc-review" title="Extracted fields with a reviewer decision">
-                <Progress value={doc.review.reviewed / doc.review.total} tone="success" />
+                <Progress value={doc.review.reviewed / doc.review.total} tone="success" label={`Fields reviewed in ${doc.original_filename}`} />
                 <span>
                   {doc.review.reviewed === doc.review.total
                     ? 'All fields reviewed'

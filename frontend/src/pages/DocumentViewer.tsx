@@ -430,7 +430,7 @@ export default function DocumentViewer() {
               <div className="review-progress-label">
                 <strong>{reviewed}</strong> of {fields.length} fields reviewed
               </div>
-              <Progress value={reviewed / fields.length} tone="success" />
+              <Progress value={reviewed / fields.length} tone="success" label="Fields reviewed" />
             </div>
           )}
         </div>
@@ -520,7 +520,9 @@ export default function DocumentViewer() {
               icon={fields.length === 0 ? 'file' : unreviewedOnly ? 'checkCircle' : 'search'}
               title={
                 fields.length === 0
-                  ? 'No fields extracted yet'
+                  ? doc.status === 'duplicate'
+                    ? 'Duplicate of an earlier upload'
+                    : 'No fields extracted yet'
                   : unreviewedOnly
                     ? scope === 'page'
                       ? `Nothing left to review on page ${page}`
@@ -528,7 +530,16 @@ export default function DocumentViewer() {
                     : `Nothing extracted on page ${page}`
               }
             >
-              {fields.length === 0 ? (
+              {fields.length === 0 && doc.status === 'duplicate' && doc.duplicate_of_document_id ? (
+                <>
+                  Same file as an earlier upload in this project, so it isn't processed separately.
+                  <div style={{ marginTop: 12 }}>
+                    <Link to={`/projects/${projectId}/documents/${doc.duplicate_of_document_id}`} className="btn btn-secondary btn-sm">
+                      <Icon name="file" size={14} /> Open the original
+                    </Link>
+                  </div>
+                </>
+              ) : fields.length === 0 ? (
                 <>
                   Process this document to extract its fields.
                   {!processing && (

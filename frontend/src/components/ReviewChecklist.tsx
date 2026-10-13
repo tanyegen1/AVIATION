@@ -173,7 +173,7 @@ export default function ReviewChecklist({
                 {s.note && <div className="checklist-note">{s.note}</div>}
                 {s.progress !== undefined && !s.done && (
                   <div className="checklist-progress">
-                    <Progress value={s.progress} tone="success" />
+                    <Progress value={s.progress} tone="success" label={`${s.title} progress`} />
                   </div>
                 )}
               </div>

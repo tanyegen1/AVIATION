@@ -434,7 +434,8 @@ function Evidence() {
 
 function FlapText({ text, delay = 0 }: { text: string; delay?: number }) {
   return (
-    <span className="lp-flap" aria-label={text}>
+    <span className="lp-flap">
+      <span className="lp-sr">{text}</span>
       {Array.from(text).map((ch, i) => (
         <span key={i} aria-hidden="true" style={{ animationDelay: `${delay + i * 28}ms` }}>
           {ch === ' ' ? ' ' : ch}

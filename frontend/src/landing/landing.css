@@ -1054,7 +1054,7 @@
   bottom: 14px;
   right: 18px;
   font: 10px 'Inter', sans-serif;
-  color: #8a8f99;
+  color: #5c616b;
 }
 
 .lp-doc-scan {
@@ -1290,7 +1290,7 @@
 }
 
 .lp-board-code {
-  color: #5f6b7d;
+  color: #8593a6;
   font-size: 11px;
   letter-spacing: 0.12em;
 }
@@ -1667,4 +1667,16 @@
 /* Compact route (phones): larger labels in the smaller coordinate space. */
 .lp-flight-svg.is-compact .lp-node-code {
   font-size: 19px;
+}
+
+/* Visually hidden text for screen readers (e.g. the split-flap board,
+   whose per-letter spans are aria-hidden). */
+.lp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }

@@ -9,8 +9,8 @@
   --surface-2: #f8fafc;
   --text: #0f1b2d;
   --text-2: #334155;
-  --muted: #5b6b82;
-  --faint: #8a98ad;
+  --muted: #4f5e74;
+  --faint: #5f6e84;
   --border: #e2e7ef;
   --border-strong: #cfd7e3;
   --accent: #1d5fd1;
@@ -20,7 +20,7 @@
   --danger-soft: #fdeceb;
   --warning: #a35a00;
   --warning-soft: #fff4e2;
-  --success: #17804a;
+  --success: #156b3e;
   --success-soft: #e7f6ee;
   --radius: 10px;
   --radius-lg: 14px;
@@ -611,12 +611,37 @@ code {
   cursor: not-allowed;
 }
 
-.btn:focus-visible,
-.icon-btn:focus-visible,
-.sidebar-link:focus-visible,
-.chip:focus-visible {
+/* Every focusable element shows a clear ring for keyboard users only. */
+:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.modal:focus-visible {
+  outline: none;
+}
+
+.sidebar :focus-visible,
+.next-step :focus-visible {
+  outline-color: #9cc3ff;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 600;
+  transition: top 0.15s;
+}
+
+.skip-link:focus {
+  top: 12px;
+  color: #fff;
 }
 
 .icon-btn {
@@ -3118,4 +3143,16 @@ kbd {
   .export-layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* Links inside running text must not rely on colour alone. */
+.finding-panel-foot a,
+.review-done a,
+.callout a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+#main-content:focus {
+  outline: none;
 }

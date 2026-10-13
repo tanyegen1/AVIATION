@@ -194,7 +194,21 @@ python -m pytest -q
 
 # Frontend typecheck + build
 cd frontend && npm run build
+
+# End-to-end browser tests (real backend, demo mode, throwaway DB)
+cd frontend && npm run build && npm run test:e2e
 ```
+
+## Accessibility and UI tests
+
+The Playwright suite in `frontend/e2e/` runs an axe-core WCAG 2 A/AA scan
+on every screen and fails on serious/critical violations — keep it green.
+Conventions it relies on: text colours meet 4.5:1 (use `--muted` /
+`--faint`, not lighter greys), every `Progress` gets a `label`, dialogs
+go through `Modal` (named via `aria-labelledby`, focus trapped, focus
+returned to the opener), icon-only buttons carry `aria-label`, and
+`#main-content` is the skip-link target. Add new screens to
+`e2e/a11y.spec.ts` and `e2e/mobile.spec.ts`.
 
 ## Extending the rules engine
 

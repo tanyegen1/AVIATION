@@ -1,11 +1,12 @@
-import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense, type ReactNode } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider } from './AuthContext'
 import RequireAuth from './components/RequireAuth'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import AppShell from './shell/AppShell'
 import { FeedbackProvider } from './ui/feedback'
+import ErrorBoundary from './ui/ErrorBoundary'
 import { Skeleton } from './ui/primitives'
 
 // The reviewer app (incl. the heavy PDF viewer) loads only after login, so the
@@ -16,6 +17,11 @@ const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const DocumentViewer = lazy(() => import('./pages/DocumentViewer'))
 const FindingsInbox = lazy(() => import('./pages/FindingsInbox'))
 const ExportScreen = lazy(() => import('./pages/ExportScreen'))
+
+function ScreenBoundary({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation()
+  return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>
+}
 
 export default function App() {
   return (
@@ -29,6 +35,7 @@ export default function App() {
             element={
               <RequireAuth>
                 <AppShell>
+                  <ScreenBoundary>
                   <Suspense
                     fallback={
                       <div className="page">
@@ -47,6 +54,7 @@ export default function App() {
                       <Route path="*" element={<Navigate to="/projects" replace />} />
                     </Routes>
                   </Suspense>
+                  </ScreenBoundary>
                 </AppShell>
               </RequireAuth>
             }

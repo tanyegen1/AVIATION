@@ -68,7 +68,11 @@ export default function Login() {
           <h1>Enter workspace</h1>
           <p className="lp-login-sub">This workspace is private. Enter the access password to continue.</p>
 
-          {error && <div className="lp-login-error">{error}</div>}
+          {error && (
+            <div className="lp-login-error" role="alert">
+              {error}
+            </div>
+          )}
 
           <label htmlFor="password">Password</label>
           <input
