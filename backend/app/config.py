@@ -30,7 +30,9 @@ FIXTURES_DIR = BACKEND_DIR / "fixtures"
 FRONTEND_DIST_DIR = Path(os.environ.get("FRONTEND_DIST_DIR", REPO_ROOT / "frontend" / "dist")).resolve()
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5").strip()
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5-5").strip()
+# Thinking depth for live extraction: low | medium | high | xhigh | max.
+ANTHROPIC_EFFORT = os.environ.get("ANTHROPIC_EFFORT", "medium").strip() or "medium"
 
 # Conservative defaults per spec section 5. Overridable via env for testing.
 MAX_UPLOAD_MB = float(os.environ.get("MAX_UPLOAD_MB", "25"))

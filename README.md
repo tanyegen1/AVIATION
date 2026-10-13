@@ -95,9 +95,13 @@ below before exposing this to anything beyond your own machine.
    # edit backend/.env and set ANTHROPIC_API_KEY=sk-ant-...
    ```
 3. Restart the backend. The mode indicator in the top bar will switch to
-   "Live mode ready". `ANTHROPIC_MODEL` defaults to `claude-sonnet-5-5`
-   (a current-generation model with native PDF document input support) if
-   not set.
+   "Live mode ready". `ANTHROPIC_MODEL` defaults to `claude-opus-5-5` and
+   `ANTHROPIC_EFFORT` to `medium` if not set. Each page is one structured-
+   output request; if the model declines a page on safety grounds the API's
+   server-side fallback retries it on a substitute model, and the job records
+   which model actually answered. Anything that still fails (a decline, a
+   cut-off response, an invalid result) marks that page failed with the
+   reason - never a guessed value.
 4. On the Documents screen, pick **Live** as the processing mode for a
    document (Demo stays selectable even with a key configured).
 

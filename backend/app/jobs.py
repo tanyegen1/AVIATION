@@ -99,6 +99,7 @@ def run_job(job_id: str, db: Session) -> None:
     start_time = time.monotonic()
     aborted_reason: str | None = None
 
+    served_models: set[str] = set()
     pages = list(range(job.page_start, job.page_end + 1))
     for batch_start in range(0, len(pages), MAX_PAGES_PER_BATCH):
         batch = pages[batch_start : batch_start + MAX_PAGES_PER_BATCH]
@@ -125,6 +126,8 @@ def run_job(job_id: str, db: Session) -> None:
                         total_output_tokens += page_result.output_tokens
                     job.pages_processed += 1
                     job.retries_used += attempt
+                    if page_result.model_id:
+                        served_models.add(page_result.model_id)
                     break
                 except UnsupportedInDemoMode as exc:
                     aborted_reason = str(exc)
@@ -146,7 +149,9 @@ def run_job(job_id: str, db: Session) -> None:
     job.failed_pages_json = json.dumps(failed_pages)
     job.finished_at = datetime.utcnow()
     job.duration_ms = int((time.monotonic() - start_time) * 1000)
-    job.model_id = run.model_id
+    # Record the model(s) that actually answered (a refusal fallback can
+    # substitute another model for some pages).
+    job.model_id = ", ".join(sorted(served_models)) if served_models else run.model_id
     job.input_tokens = total_input_tokens or None
     job.output_tokens = total_output_tokens or None
 

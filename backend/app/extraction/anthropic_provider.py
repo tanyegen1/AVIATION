@@ -1,6 +1,7 @@
 """Live extraction provider backed by the Anthropic Messages API.
 
-Uses structured outputs (`client.messages.parse`) so the response is
+Uses structured outputs (`client.beta.messages.parse`, beta only for the
+server-side refusal fallback) so the response is
 validated against `PageExtractionResult` before it ever reaches the
 database. The document's own content is sent as an untrusted PDF
 content block - nothing it contains is treated as an instruction (spec
@@ -12,7 +13,7 @@ import base64
 
 import anthropic
 
-from app.config import ANTHROPIC_API_KEY, ANTHROPIC_MODEL
+from app.config import ANTHROPIC_API_KEY, ANTHROPIC_EFFORT, ANTHROPIC_MODEL
 from app.extraction.provider import ExtractionError, ExtractionProvider, ProviderPageResult
 from app.extraction.schema import PageExtractionResult
 
@@ -38,6 +39,16 @@ rather than a digitally-produced document.
 """
 
 
+# Thinking is always on for current models and counts toward max_tokens, so
+# leave room for it plus the JSON for every field on a dense page.
+MAX_TOKENS = 16000
+
+# On a safety-classifier decline the API re-runs the same request on a
+# substitute model inside the same call ("default" picks it by category).
+# The model that actually answered is recorded on the job either way.
+FALLBACK_BETA = "server-side-fallback-2026-07-01"
+
+
 class AnthropicExtractionProvider(ExtractionProvider):
     mode = "live"
 
@@ -56,9 +67,9 @@ class AnthropicExtractionProvider(ExtractionProvider):
     ) -> ProviderPageResult:
         b64 = base64.standard_b64encode(single_page_pdf_bytes).decode("ascii")
         try:
-            response = self._client.messages.parse(
+            response = self._client.beta.messages.parse(
                 model=self.model_id,
-                max_tokens=4096,
+                max_tokens=MAX_TOKENS,
                 system=SYSTEM_PROMPT,
                 messages=[
                     {
@@ -80,10 +91,28 @@ class AnthropicExtractionProvider(ExtractionProvider):
                         ],
                     }
                 ],
+                output_config={"effort": ANTHROPIC_EFFORT},
                 output_format=PageExtractionResult,
+                betas=[FALLBACK_BETA],
+                fallbacks="default",
             )
         except anthropic.APIError as exc:
             raise ExtractionError(f"Anthropic API error: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001 - e.g. a response that fails schema validation
+            # Anything else must still surface as a failed page, never escape
+            # the job loop and leave the document stuck in "processing".
+            raise ExtractionError(f"Could not read a valid structured result: {exc}") from exc
+
+        if response.stop_reason == "refusal":
+            details = getattr(response, "stop_details", None)
+            category = getattr(details, "category", None)
+            raise ExtractionError(
+                "The model declined to process this page"
+                + (f" (category: {category})" if category else "")
+                + ". Review it manually."
+            )
+        if response.stop_reason == "max_tokens":
+            raise ExtractionError("The model's response was cut off before it finished this page.")
 
         parsed = response.parsed_output
         if parsed is None:
@@ -92,7 +121,9 @@ class AnthropicExtractionProvider(ExtractionProvider):
         usage = getattr(response, "usage", None)
         return ProviderPageResult(
             extraction=parsed,
-            model_id=self.model_id,
+            # The served model, which differs from the requested one if a
+            # fallback answered.
+            model_id=getattr(response, "model", None) or self.model_id,
             input_tokens=getattr(usage, "input_tokens", None) if usage else None,
             output_tokens=getattr(usage, "output_tokens", None) if usage else None,
         )
