@@ -13,6 +13,12 @@ RUN npm run build
 FROM python:3.13-slim AS runtime
 WORKDIR /app
 
+# A Unicode TrueType font for the PDF report, so names and notes with
+# non-Latin-1 characters (e.g. Turkish ş, ğ, ı) render instead of boxes.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 

@@ -12,7 +12,11 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
+import unicodedata
 from datetime import datetime
+from urllib.parse import quote
+from xml.sax.saxutils import escape
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response, StreamingResponse
@@ -32,11 +36,52 @@ from app.routers.projects import _get_project_or_404
 
 router = APIRouter(tags=["export"])
 
+# Helvetica (reportlab's default) only covers Latin-1, so e.g. Turkish ş/ğ/ı
+# would print as boxes. Use DejaVu Sans when the system has it (the Docker
+# image installs it); otherwise fall back to the built-in fonts.
+_FONT_DIRS = ("/usr/share/fonts/truetype/dejavu", "/usr/share/fonts/dejavu", "/Library/Fonts", "/System/Library/Fonts/Supplemental")
+
+
+def _register_unicode_font() -> tuple[str, str]:
+    from pathlib import Path
+
+    from reportlab.lib.fonts import addMapping
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    for folder in _FONT_DIRS:
+        regular, bold = Path(folder, "DejaVuSans.ttf"), Path(folder, "DejaVuSans-Bold.ttf")
+        if regular.exists() and bold.exists():
+            try:
+                pdfmetrics.registerFont(TTFont("RBSans", str(regular)))
+                pdfmetrics.registerFont(TTFont("RBSans-Bold", str(bold)))
+            except Exception:  # noqa: BLE001 - a broken font file must not break exports
+                continue
+            # <i> has no italic face here; map it to regular so markup still parses.
+            addMapping("RBSans", 0, 0, "RBSans")
+            addMapping("RBSans", 1, 0, "RBSans-Bold")
+            addMapping("RBSans", 0, 1, "RBSans")
+            addMapping("RBSans", 1, 1, "RBSans-Bold")
+            return "RBSans", "RBSans-Bold"
+    return "Helvetica", "Helvetica-Bold"
+
+
+_FONT, _FONT_BOLD = _register_unicode_font()
+
 DISCLAIMER = (
     "This report supports human review of aviation technical records. It does not certify "
     "airworthiness, authenticate source documents, or constitute a regulatory compliance decision. "
     "All findings require qualified human judgment before any maintenance or airworthiness action."
 )
+
+
+def _attachment(filename: str) -> str:
+    """Content-Disposition for a user-named file. HTTP headers are latin-1,
+    so send an ASCII fallback plus the exact UTF-8 name (RFC 6266/5987);
+    project names like "Uçak bakım" would otherwise break the response."""
+    ascii_name = unicodedata.normalize("NFKD", filename.replace("ı", "i")).encode("ascii", "ignore").decode()
+    ascii_name = re.sub(r'[^A-Za-z0-9._ -]+', "_", ascii_name).strip() or "export"
+    return f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(filename)}"
 
 
 def _gather_report_data(db: Session, project_id: str, include_dismissed: bool):
@@ -149,12 +194,14 @@ def export_csv(project_id: str, db: Session = Depends(get_db)):
     return StreamingResponse(
         iter([buf.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{project.name}_export.csv"'},
+        headers={"Content-Disposition": _attachment(f"{project.name}_export.csv")},
     )
 
 
 def _build_pdf(data: dict) -> bytes:
     styles = getSampleStyleSheet()
+    for name in ("Normal", "Title", "Heading2", "Heading3", "Heading4"):
+        styles[name].fontName = _FONT_BOLD if name != "Normal" else _FONT
     title_style = ParagraphStyle("TitleCenter", parent=styles["Title"], alignment=TA_CENTER)
     small = ParagraphStyle("Small", parent=styles["Normal"], fontSize=8, leading=10)
     h2 = styles["Heading2"]
@@ -168,9 +215,9 @@ def _build_pdf(data: dict) -> bytes:
     story.append(Paragraph("RecordBridge", title_style))
     story.append(Paragraph("Review Support Report (not an airworthiness certification)", styles["Heading3"]))
     story.append(Spacer(1, 12))
-    story.append(Paragraph(f"<b>Project:</b> {project.name}", normal))
+    story.append(Paragraph(f"<b>Project:</b> {escape(project.name)}", normal))
     if project.description:
-        story.append(Paragraph(f"<b>Description:</b> {project.description}", normal))
+        story.append(Paragraph(f"<b>Description:</b> {escape(project.description)}", normal))
     story.append(Paragraph(f"<b>Generated:</b> {datetime.utcnow().isoformat()}Z", normal))
     story.append(
         Paragraph(
@@ -205,8 +252,8 @@ def _build_pdf(data: dict) -> bytes:
     if data["latest_rule_run"]:
         executed = json.loads(data["latest_rule_run"].rule_ids_executed_json)
         skipped = json.loads(data["latest_rule_run"].rule_ids_skipped_json)
-        story.append(Paragraph(f"<b>Performed:</b> {', '.join(executed) or 'none'}", small))
-        story.append(Paragraph(f"<b>Skipped:</b> {', '.join(skipped) or 'none'}", small))
+        story.append(Paragraph(f"<b>Performed:</b> {escape(', '.join(executed) or 'none')}", small))
+        story.append(Paragraph(f"<b>Skipped:</b> {escape(', '.join(skipped) or 'none')}", small))
     else:
         story.append(Paragraph("No rule run has been executed for this project yet.", normal))
     story.append(Spacer(1, 14))
@@ -223,25 +270,25 @@ def _build_pdf(data: dict) -> bytes:
             ]
             story.append(
                 Paragraph(
-                    f"<b>[{f.severity.upper()}] {f.title}</b> &mdash; status: {f.status}"
+                    f"<b>[{escape(f.severity.upper())}] {escape(f.title)}</b> &mdash; status: {escape(f.status)}"
                     + (" (STALE - needs re-review)" if f.stale else ""),
                     styles["Heading4"],
                 )
             )
-            story.append(Paragraph(f.explanation, normal))
-            story.append(Paragraph(f"<i>Documents:</i> {', '.join(doc_names)}", small))
+            story.append(Paragraph(escape(f.explanation), normal))
+            story.append(Paragraph(f"<i>Documents:</i> {escape(', '.join(doc_names))}", small))
             for ev in json.loads(f.evidence_json):
                 dname = data["doc_by_id"].get(ev.get("document_id"))
                 dname = dname.original_filename if dname else ev.get("document_id")
                 story.append(
                     Paragraph(
-                        f"<i>Evidence:</i> {dname}, page {ev.get('page_number', '?')}: "
-                        f"“{(ev.get('excerpt') or '').strip()[:300]}”",
+                        f"<i>Evidence:</i> {escape(str(dname))}, page {escape(str(ev.get('page_number') or '?'))}: "
+                        f"“{escape((ev.get('excerpt') or '').strip()[:300])}”",
                         small,
                     )
                 )
             if f.reviewer_note:
-                story.append(Paragraph(f"<i>Reviewer note:</i> {f.reviewer_note}", small))
+                story.append(Paragraph(f"<i>Reviewer note:</i> {escape(f.reviewer_note)}", small))
             story.append(Spacer(1, 8))
     story.append(Spacer(1, 14))
 
@@ -267,6 +314,8 @@ def _table(rows: list[list[str]]) -> Table:
             [
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0a2540")),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), _FONT_BOLD),
+                ("FONTNAME", (0, 1), (-1, -1), _FONT),
                 ("FONTSIZE", (0, 0), (-1, -1), 8),
                 ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -284,5 +333,5 @@ def export_pdf(project_id: str, include_dismissed: bool = Query(default=False), 
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{data["project"].name}_report.pdf"'},
+        headers={"Content-Disposition": _attachment(f"{data['project'].name}_report.pdf")},
     )

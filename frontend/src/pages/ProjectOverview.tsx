@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, ApiError } from '../api'
 import { StatusBadge } from '../components/Badges'
+import ReviewChecklist from '../components/ReviewChecklist'
 import { useShell } from '../shell/AppShell'
 import type { Document } from '../types'
 import { Icon } from '../ui/Icon'
 import { useFeedback } from '../ui/feedback'
-import { Button, EmptyState, PageHeader, Progress, Skeleton, timeAgo } from '../ui/primitives'
+import { Button, EmptyState, PageHeader, Skeleton, timeAgo } from '../ui/primitives'
 
 export default function ProjectOverview() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -19,7 +20,7 @@ export default function ProjectOverview() {
   useEffect(() => {
     if (!projectId) return
     api.listDocuments(projectId).then(setDocuments).catch(() => setDocuments([]))
-  }, [projectId])
+  }, [projectId, summary])
 
   async function toggleSetting() {
     if (!project) return
@@ -60,9 +61,6 @@ export default function ProjectOverview() {
     )
   }
 
-  const s = summary
-  const reviewedPct = s.fields.total ? s.fields.reviewed / s.fields.total : 0
-
   return (
     <div className="page">
       <PageHeader
@@ -80,47 +78,7 @@ export default function ProjectOverview() {
         }
       />
 
-      <div className="stat-grid">
-        <div className="card stat">
-          <div className="stat-label">
-            <Icon name="file" size={14} /> Documents
-          </div>
-          <div className="stat-value">{s.documents.total}</div>
-          <div className="stat-sub">
-            {s.documents.processed} processed
-            {s.documents.failed > 0 && ` · ${s.documents.failed} failed`}
-            {s.documents.active > 0 && ` · ${s.documents.active} processing`}
-          </div>
-        </div>
-        <div className="card stat">
-          <div className="stat-label">
-            <Icon name="checkCircle" size={14} /> Fields reviewed
-          </div>
-          <div className="stat-value">
-            {s.fields.reviewed}
-            <span className="faint" style={{ fontSize: 16 }}> / {s.fields.total}</span>
-          </div>
-          <Progress value={reviewedPct} tone="success" />
-        </div>
-        <Link to={`/projects/${project.id}/findings?view=matches`} className="card stat stat-link">
-          <div className="stat-label">
-            <Icon name="link" size={14} /> Matches to confirm
-          </div>
-          <div className="stat-value">{s.matches.suggested}</div>
-          <div className="stat-sub">
-            {s.matches.confirmed} confirmed · {s.matches.rejected} rejected
-          </div>
-        </Link>
-        <Link to={`/projects/${project.id}/findings`} className="card stat stat-link">
-          <div className="stat-label">
-            <Icon name="alert" size={14} /> Open findings
-          </div>
-          <div className="stat-value">{s.findings.open}</div>
-          <div className="stat-sub">
-            {s.findings.stale > 0 ? `${s.findings.stale} need re-review` : `${s.findings.total} total`}
-          </div>
-        </Link>
-      </div>
+      <ReviewChecklist projectId={project.id} summary={summary} documents={documents} />
 
       <div className="section-title">
         <h2>Recent documents</h2>

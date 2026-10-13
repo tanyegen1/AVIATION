@@ -60,6 +60,13 @@ decision to expand scope.
     are shown, not judged (judging them is the rules engine's job).
     Match decisions can be undone (`status: "suggested"`); withdrawing a
     confirmed match marks the findings built on it `stale`.
+  - **Overview checklist** (`ReviewChecklist.tsx`): upload → extract →
+    review fields → confirm matches → decide findings → export, derived
+    only from `/summary` counts and the document list. Its "ready" copy
+    says every item *has a reviewer decision* — never that the records
+    are complete, correct or compliant.
+  - **Export** previews the real PDF (same endpoint as the download)
+    in `PdfViewer`, next to a readiness list of outstanding items.
   - **Brand:** logo assets live in `frontend/public/brand/` (white and navy
     transparent PNGs of the mark and wordmark, plus app icons), rendered via
     `src/components/Brand.tsx`. Brand navy is `#022e60` (sampled from the
@@ -116,6 +123,11 @@ decision to expand scope.
   (viewer, rules, summary, export) uses `app/current_fields.py`: for each
   page, the fields from the newest run that actually processed that page.
   Never query `ExtractedField` directly for "the" value of a field.
+- **Exports take untrusted text** (filenames, notes, extracted values):
+  escape everything passed to reportlab `Paragraph` (it parses markup),
+  build `Content-Disposition` with `_attachment()` (UTF-8 names), and
+  keep the DejaVu font (installed in the Docker image) so non-Latin-1
+  characters such as Turkish ş/ğ/ı render.
 - **Rule runs are serialized** by a process-wide lock in
   `rules/engine.py`: processing jobs run in worker threads, and two
   documents finishing together used to insert duplicate match
