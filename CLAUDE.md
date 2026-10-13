@@ -42,6 +42,15 @@ decision to expand scope.
   - **Deep links:** the document viewer honours `?page=N&field=<id>`
     (opens that page and highlights the field). Finding evidence carries
     `field_id` so "Open page" lands on the exact cited field.
+  - **Review workspace** (`DocumentViewer.tsx`): one selected field at a
+    time, keyboard-driven (J/K move, C confirm, E correct, F flag, N next
+    unreviewed, [ ] pages, ? help — ignored while typing or when a dialog
+    is open). Confirm/correct/flag on the selected field advances to the
+    next unreviewed one. Field review status uses `ReviewBadge` (confirmed
+    = green), not the findings `StatusBadge` (confirmed finding = red).
+    The PDF page rail (react-pdf `Thumbnail`) shows per-page unreviewed
+    counts; document list rows carry `review: {total, reviewed}` over
+    current fields.
   - **Brand:** logo assets live in `frontend/public/brand/` (white and navy
     transparent PNGs of the mark and wordmark, plus app icons), rendered via
     `src/components/Brand.tsx`. Brand navy is `#022e60` (sampled from the

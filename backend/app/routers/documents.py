@@ -8,6 +8,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import MAX_PAGE_COUNT, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB
+from app.current_fields import current_fields
 from app.db import get_db
 from app.models import ComponentMatch, Document, ExtractedField, ExtractionRun, Finding, ProcessingJob
 from app.pdf_utils import PdfValidationError, validate_and_inspect
@@ -80,8 +81,8 @@ def list_documents(project_id: str, db: Session = Depends(get_db)):
 
 
 def _document_with_job(db: Session, doc: Document) -> dict:
-    """Document plus its most recent processing job, so the UI can show live
-    progress without a request per row."""
+    """Document plus its most recent processing job and review progress over
+    its current fields, so the UI can show both without a request per row."""
     latest = (
         db.query(ProcessingJob)
         .filter(ProcessingJob.document_id == doc.id)
@@ -90,6 +91,11 @@ def _document_with_job(db: Session, doc: Document) -> dict:
     )
     out = document_out(doc)
     out["latest_job"] = job_out(latest) if latest else None
+    fields = current_fields(db, doc.id)
+    out["review"] = {
+        "total": len(fields),
+        "reviewed": sum(1 for f in fields if f.review_status != "unreviewed"),
+    }
     return out
 
 

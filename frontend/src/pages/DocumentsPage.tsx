@@ -328,6 +328,16 @@ function DocItem({
                 </span>
               )}
             </div>
+            {doc.review && doc.review.total > 0 && (
+              <div className="doc-review" title="Extracted fields with a reviewer decision">
+                <Progress value={doc.review.reviewed / doc.review.total} tone="success" />
+                <span>
+                  {doc.review.reviewed === doc.review.total
+                    ? 'All fields reviewed'
+                    : `${doc.review.reviewed}/${doc.review.total} fields reviewed`}
+                </span>
+              </div>
+            )}
             {doc.status === 'duplicate' && <div className="doc-status-note">Same file as an earlier upload — not processed.</div>}
             {doc.status === 'failed' && doc.error_message && (
               <div className="doc-status-note is-error" title={doc.error_message}>

@@ -33,6 +33,7 @@ export interface Document {
   error_message: string | null
   uploaded_at: string
   latest_job?: ProcessingJob | null
+  review?: { total: number; reviewed: number }
 }
 
 export interface FailedPage {

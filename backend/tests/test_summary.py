@@ -70,3 +70,17 @@ def test_finding_evidence_points_at_the_cited_field(client):
         cited = next(f for f in fields if f["id"] == ev["field_id"])
         assert cited["page_number"] == ev["page_number"]
         assert cited["field_name"] == "flight_hours"
+
+
+def test_document_list_includes_review_progress(client):
+    project = _create_project(client)
+    doc = upload_pdf(client, project["id"], "A1_status_sheet.pdf")
+    listed = client.get(f"/api/projects/{project['id']}/documents").json()
+    assert listed[0]["review"] == {"total": 0, "reviewed": 0}
+
+    process_document(client, doc["id"])
+    fields = client.get(f"/api/documents/{doc['id']}/fields").json()
+    client.patch(f"/api/fields/{fields[0]['id']}/confirm")
+    client.patch(f"/api/fields/{fields[1]['id']}/flag-unreadable", json={})
+    review = client.get(f"/api/documents/{doc['id']}").json()["review"]
+    assert review == {"total": len(fields), "reviewed": 2}

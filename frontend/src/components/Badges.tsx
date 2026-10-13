@@ -49,3 +49,14 @@ export function EvidenceBadge({ verification }: { verification: string }) {
   }
   return <span className={`badge ${tone[verification] ?? ''}`}>{labels[verification] ?? verification}</span>
 }
+
+// Field review status: unlike findings, a confirmed field is a good outcome.
+export function ReviewBadge({ status }: { status: string }) {
+  const tone: Record<string, string> = {
+    unreviewed: '',
+    confirmed: 'success',
+    corrected: 'info',
+    flagged_unreadable: 'warning',
+  }
+  return <span className={`badge ${tone[status] ?? ''}`}>{status.replace(/_/g, ' ')}</span>
+}
