@@ -93,7 +93,7 @@ export const api = {
     }),
 
   listMatches: (projectId: string) => request<ComponentMatch[]>(`/api/projects/${projectId}/matches`),
-  decideMatch: (id: string, status: 'confirmed' | 'rejected', reviewer_note?: string) =>
+  decideMatch: (id: string, status: 'confirmed' | 'rejected' | 'suggested', reviewer_note?: string) =>
     request<ComponentMatch>(`/api/matches/${id}`, { method: 'PATCH', body: JSON.stringify({ status, reviewer_note }) }),
 
   listFindings: (projectId: string, filters?: { status?: string; severity?: string; rule_id?: string }) => {

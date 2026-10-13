@@ -44,7 +44,8 @@ class FieldFlagUnreadable(BaseModel):
 
 
 class MatchDecision(BaseModel):
-    status: Literal["confirmed", "rejected"]
+    # "suggested" undoes an earlier decision and puts the pair back in review.
+    status: Literal["confirmed", "rejected", "suggested"]
     reviewer_note: str | None = None
 
 

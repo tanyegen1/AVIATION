@@ -10,6 +10,7 @@ silently preserved.
 from __future__ import annotations
 
 import json
+import threading
 from collections import defaultdict
 
 from sqlalchemy import and_, or_
@@ -26,6 +27,12 @@ from app.rules.checks import (
     check_required_identifiers,
 )
 from app.rules.helpers import primary_field, processed_documents
+
+# Processing jobs run in worker threads, so two documents finishing together
+# would otherwise run the rules concurrently and both insert the same match
+# suggestion. One process serves the whole app (see CLAUDE.md), so a
+# process-wide lock is enough to make rule runs one-at-a-time.
+_RULES_LOCK = threading.Lock()
 
 
 def generate_component_match_suggestions(session: Session, documents: list) -> list[ComponentMatch]:
@@ -50,7 +57,7 @@ def generate_component_match_suggestions(session: Session, documents: list) -> l
                             and_(ComponentMatch.document_id_a == b.id, ComponentMatch.document_id_b == a.id),
                         ),
                     )
-                    .one_or_none()
+                    .first()  # tolerate duplicates left by older versions
                 )
                 if exists:
                     continue
@@ -115,6 +122,11 @@ def _mark_stale_findings(session: Session, project_id: str, rule_ids_executed: l
 
 
 def run_rules_for_project(session: Session, project_id: str) -> RuleRun:
+    with _RULES_LOCK:
+        return _run_rules_for_project(session, project_id)
+
+
+def _run_rules_for_project(session: Session, project_id: str) -> RuleRun:
     project = session.get(Project, project_id)
     documents = processed_documents(session, project_id)
 

@@ -60,3 +60,9 @@ export function ReviewBadge({ status }: { status: string }) {
   }
   return <span className={`badge ${tone[status] ?? ''}`}>{status.replace(/_/g, ' ')}</span>
 }
+
+// Component match status: a confirmed pairing is a neutral-to-good outcome.
+export function MatchBadge({ status }: { status: string }) {
+  const tone: Record<string, string> = { suggested: 'info', confirmed: 'success', rejected: '' }
+  return <span className={`badge ${tone[status] ?? ''}`}>{status}</span>
+}

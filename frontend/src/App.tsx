@@ -14,8 +14,7 @@ const ProjectList = lazy(() => import('./pages/ProjectList'))
 const ProjectOverview = lazy(() => import('./pages/ProjectOverview'))
 const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const DocumentViewer = lazy(() => import('./pages/DocumentViewer'))
-const FindingsList = lazy(() => import('./pages/FindingsList'))
-const FindingDetail = lazy(() => import('./pages/FindingDetail'))
+const FindingsInbox = lazy(() => import('./pages/FindingsInbox'))
 const ExportScreen = lazy(() => import('./pages/ExportScreen'))
 
 export default function App() {
@@ -42,8 +41,8 @@ export default function App() {
                       <Route path="/projects/:projectId" element={<ProjectOverview />} />
                       <Route path="/projects/:projectId/documents" element={<DocumentsPage />} />
                       <Route path="/projects/:projectId/documents/:documentId" element={<DocumentViewer />} />
-                      <Route path="/projects/:projectId/findings" element={<FindingsList />} />
-                      <Route path="/projects/:projectId/findings/:findingId" element={<FindingDetail />} />
+                      {/* One route so the inbox keeps its state while the selection changes. */}
+                      <Route path="/projects/:projectId/findings/:findingId?" element={<FindingsInbox />} />
                       <Route path="/projects/:projectId/export" element={<ExportScreen />} />
                       <Route path="*" element={<Navigate to="/projects" replace />} />
                     </Routes>

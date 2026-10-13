@@ -102,7 +102,7 @@ export default function ProjectOverview() {
           </div>
           <Progress value={reviewedPct} tone="success" />
         </div>
-        <div className="card stat">
+        <Link to={`/projects/${project.id}/findings?view=matches`} className="card stat stat-link">
           <div className="stat-label">
             <Icon name="link" size={14} /> Matches to confirm
           </div>
@@ -110,8 +110,8 @@ export default function ProjectOverview() {
           <div className="stat-sub">
             {s.matches.confirmed} confirmed · {s.matches.rejected} rejected
           </div>
-        </div>
-        <div className="card stat">
+        </Link>
+        <Link to={`/projects/${project.id}/findings`} className="card stat stat-link">
           <div className="stat-label">
             <Icon name="alert" size={14} /> Open findings
           </div>
@@ -119,7 +119,7 @@ export default function ProjectOverview() {
           <div className="stat-sub">
             {s.findings.stale > 0 ? `${s.findings.stale} need re-review` : `${s.findings.total} total`}
           </div>
-        </div>
+        </Link>
       </div>
 
       <div className="section-title">

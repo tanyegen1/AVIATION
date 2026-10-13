@@ -181,9 +181,20 @@ def decide_match(match_id: str, body: MatchDecision, db: Session = Depends(get_d
     m = db.get(ComponentMatch, match_id)
     if m is None:
         raise HTTPException(status_code=404, detail="Match not found.")
+    was_confirmed = m.status == "confirmed"
     m.status = body.status
     m.reviewer_note = body.reviewer_note
-    m.reviewed_at = datetime.utcnow()
+    m.reviewed_at = None if body.status == "suggested" else datetime.utcnow()
+    if was_confirmed and body.status != "confirmed":
+        # Cross-record findings for this pair (dedup keys carry the match id)
+        # no longer rest on a confirmed match. The rules may not run again
+        # for them (no confirmed matches left), so flag them here.
+        for f in db.query(Finding).filter(
+            Finding.project_id == m.project_id,
+            Finding.status.in_(["open", "confirmed"]),
+            Finding.dedup_key.like(f"%|{m.id}%"),
+        ):
+            f.stale = True
     db.commit()
     run_rules_for_project(db, m.project_id)
     db.refresh(m)

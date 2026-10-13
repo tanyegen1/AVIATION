@@ -51,6 +51,15 @@ decision to expand scope.
     The PDF page rail (react-pdf `Thumbnail`) shows per-page unreviewed
     counts; document list rows carry `review: {total, reviewed}` over
     current fields.
+  - **Findings inbox** (`FindingsInbox.tsx`, one route
+    `/projects/:id/findings/:findingId?` so state survives selection
+    changes): list left, detail right (`FindingPanel`), J/K + C/R/D
+    shortcuts, auto-advance to the next open finding. `?view=matches`
+    shows component matches with `MatchCompare` — a side-by-side table
+    that marks same/differs **only for identity fields**; usage and dates
+    are shown, not judged (judging them is the rules engine's job).
+    Match decisions can be undone (`status: "suggested"`); withdrawing a
+    confirmed match marks the findings built on it `stale`.
   - **Brand:** logo assets live in `frontend/public/brand/` (white and navy
     transparent PNGs of the mark and wordmark, plus app icons), rendered via
     `src/components/Brand.tsx`. Brand navy is `#022e60` (sampled from the
@@ -107,6 +116,11 @@ decision to expand scope.
   (viewer, rules, summary, export) uses `app/current_fields.py`: for each
   page, the fields from the newest run that actually processed that page.
   Never query `ExtractedField` directly for "the" value of a field.
+- **Rule runs are serialized** by a process-wide lock in
+  `rules/engine.py`: processing jobs run in worker threads, and two
+  documents finishing together used to insert duplicate match
+  suggestions. Keep the app single-process, or replace the lock with a
+  database-level guarantee before scaling out.
 - **Deleting a document** removes its component matches, promotes the
   earliest duplicate upload to an ordinary (processable) document, marks
   open/confirmed findings that cited it `stale`, and re-runs the rules.
